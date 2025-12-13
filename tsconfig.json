@@ -1,0 +1,19 @@
+{
+  "files": [],
+  "references": [
+    {
+      "path": "./tsconfig.node.json"
+    },
+    {
+      "path": "./tsconfig.app.json"
+    },
+    {
+      "path": "./tsconfig.vitest.json"
+    }
+  ],
+  "compilerOptions": {
+    "moduleResolution": "node", // 必须是 node
+    "allowSyntheticDefaultImports": true, // 允许合成默认导入（关键）
+    "esModuleInterop": true // 兼容 CommonJS/ES 模块
+  }
+}
