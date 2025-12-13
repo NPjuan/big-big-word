@@ -1,16 +1,17 @@
 export interface Word {
   word: string
   phonetic: string
-  partOfSpeech: string
+  partOfSpeech: string[]
   participle: string
   meaning: string
+  createdAt: string
 }
 
 /**
  * 生成动词的分词形式
  */
-export function generateParticipleForms(word: string, partOfSpeech: string): string {
-  if (partOfSpeech !== 'verb') return ''
+export function generateParticipleForms(word: string, partOfSpeech: string[]): string {
+  if (!partOfSpeech.includes('verb')) return ''
 
   const baseWord = word.toLowerCase()
 
@@ -39,8 +40,8 @@ export function generateSimplePhonetic(word: string): string {
 /**
  * 从Free Dictionary API获取单词详细信息
  */
-export async function fetchWordDetails(word: string): Promise<Partial<Word>> {
-  if (!word.trim()) return {}
+export async function fetchWordDetails(word: string): Promise<Partial<Word> | null> {
+  if (!word.trim()) return null
 
   try {
     const response = await fetch(
@@ -55,56 +56,60 @@ export async function fetchWordDetails(word: string): Promise<Partial<Word>> {
         const result: Partial<Word> = {}
 
         // 获取音标
-        if (wordData.phonetics && wordData.phonetics.length > 0) {
-          const phonetic = wordData.phonetics.find((p: any) => p.text)?.text
-          result.phonetic = phonetic || generateSimplePhonetic(word)
-        } else {
-          result.phonetic = generateSimplePhonetic(word)
-        }
-
+        result.phonetic = wordData.phonetics?.find((p: any) => p.text).text
         // 获取词性和英文意思
         if (wordData.meanings && wordData.meanings.length > 0) {
-          const firstMeaning = wordData.meanings[0]
-          result.partOfSpeech = firstMeaning.partOfSpeech || ''
+          // 收集所有词性
+          const partOfSpeechSet = new Set<string>()
+          let meaning = word
 
-          if (firstMeaning.definitions && firstMeaning.definitions.length > 0) {
-            const firstDefinition = firstMeaning.definitions[0]
-            result.meaning = firstDefinition.definition || word
-          } else {
-            result.meaning = word
-          }
+          wordData.meanings.forEach((meaningData: any) => {
+            if (meaningData.partOfSpeech) {
+              partOfSpeechSet.add(meaningData.partOfSpeech)
+            }
+            // 使用第一个有定义的释义
+            if (meaningData.definitions && meaningData.definitions.length > 0 && meaning === word) {
+              meaning = meaningData.definitions[0].definition || word
+            }
+          })
+
+          result.partOfSpeech = Array.from(partOfSpeechSet)
+          result.meaning = meaning
         } else {
-          result.partOfSpeech = ''
+          result.partOfSpeech = []
           result.meaning = word
         }
 
-        // 获取分词形式
-        result.participle = generateParticipleForms(word, result.partOfSpeech || '')
+        // 获取分词形式(TODO)
+        result.participle = ''
+
+        // 添加当前时间戳
+        result.createdAt = new Date().toISOString()
 
         return result
       }
+    } else {
+      console.error('获取单词信息失败:', response.statusText)
     }
   } catch (error) {
     console.error('获取单词信息失败:', error)
   }
 
   // API调用失败时的备选方案
-  return {}
+  return null
 }
 
 /**
  * 播放单词发音
  */
-export function playWord(word: string, playingWords: Set<string>): void {
-  if (!word || playingWords.has(word)) return
+export function playWord(word: string): void {
+  if (!word) return
 
   // 检查SpeechSynthesis API是否可用
   if (typeof speechSynthesis === 'undefined' || typeof SpeechSynthesisUtterance === 'undefined') {
     console.warn('SpeechSynthesis API is not supported in this browser')
     return
   }
-
-  playingWords.add(word)
 
   const utterance = new SpeechSynthesisUtterance(word)
   utterance.lang = 'en-US'
@@ -113,13 +118,40 @@ export function playWord(word: string, playingWords: Set<string>): void {
 
   speechSynthesis.cancel()
 
-  utterance.onend = () => {
-    playingWords.delete(word)
-  }
-
-  utterance.onerror = () => {
-    playingWords.delete(word)
-  }
-
   speechSynthesis.speak(utterance)
+}
+
+/**
+ * 保存单词到localStorage
+ */
+export function saveWordsToStorage(words: Word[]): void {
+  try {
+    localStorage.setItem('wordGallery', JSON.stringify(words))
+  } catch (error) {
+    console.error('保存单词到localStorage失败:', error)
+  }
+}
+
+/**
+ * 从localStorage加载单词
+ */
+export function loadWordsFromStorage(): Word[] {
+  try {
+    const stored = localStorage.getItem('wordGallery')
+    if (stored) {
+      return JSON.parse(stored)
+    }
+  } catch (error) {
+    console.error('从localStorage加载单词失败:', error)
+  }
+  return []
+}
+
+/**
+ * 删除单词并更新localStorage
+ */
+export function deleteWordFromStorage(words: Word[], wordToDelete: Word): Word[] {
+  const updatedWords = words.filter((word) => word.word !== wordToDelete.word)
+  saveWordsToStorage(updatedWords)
+  return updatedWords
 }

@@ -11,9 +11,39 @@
         ></v-btn>
       </v-app-bar>
 
-      <v-navigation-drawer>
-        <v-list>
-          <v-list-item title="今日单词"></v-list-item>
+      <v-navigation-drawer permanent>
+        <v-list nav>
+          <v-list-item
+            prepend-icon="mdi-home"
+            title="单词库"
+            value="home"
+            :to="{ name: 'Home' }"
+            active-class="text-primary"
+          ></v-list-item>
+
+          <v-list-item
+            prepend-icon="mdi-book-open-variant"
+            title="学习模式"
+            value="study"
+            :to="{ name: 'Study' }"
+            active-class="text-primary"
+          ></v-list-item>
+
+          <v-list-item
+            prepend-icon="mdi-chart-bar"
+            title="统计信息"
+            value="stats"
+            :to="{ name: 'Stats' }"
+            active-class="text-primary"
+          ></v-list-item>
+
+          <v-list-item
+            prepend-icon="mdi-cog"
+            title="设置"
+            value="settings"
+            :to="{ name: 'Settings' }"
+            active-class="text-primary"
+          ></v-list-item>
         </v-list>
       </v-navigation-drawer>
 
