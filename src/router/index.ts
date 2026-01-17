@@ -1,33 +1,44 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import HomePage from '@/pages/word-gallery.vue'
-import StudyMode from '@/pages/study-mode.vue'
-import Stats from '@/pages/stats.vue'
-import Settings from '@/pages/settings.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
     {
       path: '/',
-      name: 'Home',
-      component: HomePage,
-    },
-    {
-      path: '/study',
-      name: 'Study',
-      component: StudyMode,
-    },
-    {
-      path: '/stats',
-      name: 'Stats',
-      component: Stats,
-    },
-    {
-      path: '/settings',
-      name: 'Settings',
-      component: Settings,
+      component: () => import('@/layouts/MainLayout.vue'),
+      children: [
+        {
+          path: '',
+          name: 'home',
+          component: () => import('@/pages/Home.vue'),
+          meta: {
+            title: 'Learn',
+          },
+        },
+        {
+          path: 'history',
+          name: 'history',
+          component: () => import('@/pages/WordHistory.vue'),
+          meta: {
+            title: 'History',
+          },
+        },
+        {
+          path: 'word/:id',
+          name: 'word-detail',
+          component: () => import('@/pages/WordDetail.vue'),
+          meta: {
+            title: 'Word Detail',
+          },
+        },
+      ],
     },
   ],
+})
+
+// Set page title
+router.beforeEach((to) => {
+  document.title = `${to.meta.title || 'Big Big Word'} | Vocabulary Learning`
 })
 
 export default router
