@@ -451,8 +451,9 @@ const findRelatedForms = async (word: string): Promise<Partial<WordFormsData>> =
 /**
  * Helper: Check if character is a vowel
  */
-const isVowel = (char: string): boolean => {
-  return ['a', 'e', 'i', 'o', 'u'].includes(char?.toLowerCase())
+const isVowel = (char: string | undefined): boolean => {
+  if (!char) return false
+  return ['a', 'e', 'i', 'o', 'u'].includes(char.toLowerCase())
 }
 
 /**
@@ -464,6 +465,9 @@ const shouldDoubleConsonant = (word: string): boolean => {
   const lastChar = word[word.length - 1]
   const secondLastChar = word[word.length - 2]
   const thirdLastChar = word[word.length - 3]
+
+  // Check if lastChar exists before using it
+  if (!lastChar) return false
 
   // CVC pattern (consonant-vowel-consonant) in stressed syllable
   return (

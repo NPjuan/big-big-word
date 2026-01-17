@@ -154,7 +154,7 @@
 
 <script setup lang="ts">
 import { ref, computed, type PropType } from 'vue'
-import type { Word } from '@/types/word'
+import type { Word } from '@/types/word.types'
 
 const props = defineProps({
   word: {
@@ -193,7 +193,7 @@ const getPhonetic = computed(() => {
 
 const displayExamples = computed(() => {
   const examples: string[] = []
-  props.word.englishMeaning.forEach((meaning) => {
+  props.word.englishMeaning.forEach((meaning: { examples?: string[] }) => {
     if (meaning.examples) {
       examples.push(...meaning.examples)
     }
@@ -235,16 +235,16 @@ const handleDragStart = (e: MouseEvent | TouchEvent) => {
   if (props.index !== 0) return
 
   isDragging.value = true
-  const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX
-  const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY
+  const clientX = 'touches' in e ? (e.touches[0]?.clientX ?? 0) : e.clientX
+  const clientY = 'touches' in e ? (e.touches[0]?.clientY ?? 0) : e.clientY
   dragStartX.value = clientX
   dragStartY.value = clientY
 
   const handleDragMove = (moveEvent: MouseEvent | TouchEvent) => {
     if (!isDragging.value) return
 
-    const moveX = 'touches' in moveEvent ? moveEvent.touches[0].clientX : moveEvent.clientX
-    const moveY = 'touches' in moveEvent ? moveEvent.touches[0].clientY : moveEvent.clientY
+    const moveX = 'touches' in moveEvent ? (moveEvent.touches[0]?.clientX ?? 0) : moveEvent.clientX
+    const moveY = 'touches' in moveEvent ? (moveEvent.touches[0]?.clientY ?? 0) : moveEvent.clientY
 
     dragX.value = moveX - dragStartX.value
     dragY.value = moveY - dragStartY.value

@@ -85,6 +85,9 @@ export const fetchWordData = async (word: string): Promise<WordData | null> => {
     }
 
     const firstEntry = data[0]
+    if (!firstEntry) {
+      return null
+    }
 
     // Extract phonetic (prefer the one with audio)
     let phonetic = firstEntry.phonetic || ''

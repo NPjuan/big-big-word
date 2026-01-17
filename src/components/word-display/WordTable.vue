@@ -555,10 +555,13 @@ const getFirstChineseMeaning = (word: Word): string => {
     return '暂无中文释义'
   }
   const firstMeaning = word.chineseMeaning[0]
-  if (!firstMeaning.definitions || firstMeaning.definitions.length === 0) {
+  if (!firstMeaning || !firstMeaning.definitions || firstMeaning.definitions.length === 0) {
     return '暂无中文释义'
   }
   const definition = firstMeaning.definitions[0]
+  if (!definition) {
+    return '暂无中文释义'
+  }
   return definition.length > 50 ? definition.substring(0, 50) + '...' : definition
 }
 
@@ -567,10 +570,13 @@ const getFirstEnglishMeaning = (word: Word): string => {
     return 'No definition available'
   }
   const firstMeaning = word.englishMeaning[0]
-  if (!firstMeaning.definitions || firstMeaning.definitions.length === 0) {
+  if (!firstMeaning || !firstMeaning.definitions || firstMeaning.definitions.length === 0) {
     return 'No definition available'
   }
   const definition = firstMeaning.definitions[0]
+  if (!definition) {
+    return 'No definition available'
+  }
   return definition.length > 80 ? definition.substring(0, 80) + '...' : definition
 }
 
