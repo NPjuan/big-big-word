@@ -23,7 +23,7 @@
 
       <!-- Navigation -->
       <nav class="nav-section">
-        <router-link to="/" class="nav-link" active-class="nav-link-active">
+        <router-link to="/" class="nav-link" exact-active-class="nav-link-active">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
             <path
               d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
@@ -34,7 +34,7 @@
           </svg>
           <span>Learn</span>
         </router-link>
-        <router-link to="/history" class="nav-link" active-class="nav-link-active">
+        <router-link to="/history" class="nav-link" exact-active-class="nav-link-active">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
             <path
               d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
@@ -119,17 +119,16 @@ const masteryPercentage = computed(() => {
 
 <style scoped>
 .app-header {
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(30px);
-  border-radius: 20px;
-  border: 1px solid rgba(13, 148, 136, 0.15);
-  box-shadow:
-    0 4px 16px rgba(0, 0, 0, 0.08),
-    inset 0 1px 0 rgba(255, 255, 255, 0.6);
-  padding: 1rem 1.5rem;
-  animation: fadeInDown 0.6s ease-out;
-  max-width: 1600px;
-  margin: 0 auto;
+  background: rgba(255, 255, 255, 0.98);
+  backdrop-filter: blur(20px);
+  border-radius: 0;
+  border: none;
+  border-bottom: 1px solid rgba(13, 148, 136, 0.08);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  padding: 0.75rem 1.5rem;
+  animation: fadeInDown 0.4s ease-out;
+  max-width: 100%;
+  margin: 0;
 }
 
 @keyframes fadeInDown {
@@ -147,14 +146,17 @@ const masteryPercentage = computed(() => {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 2rem;
-  flex-wrap: wrap;
+  gap: 1.5rem;
+  flex-wrap: nowrap;
+  max-width: 1400px;
+  margin: 0 auto;
 }
 
 .logo-section {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: 0.75rem;
+  flex-shrink: 0;
 }
 
 /* ===== Navigation Section ===== */
@@ -167,36 +169,37 @@ const masteryPercentage = computed(() => {
 .nav-link {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.625rem 1rem;
-  border-radius: 12px;
-  background: rgba(13, 148, 136, 0.05);
-  border: 2px solid transparent;
-  color: #475569;
-  font-weight: 700;
+  gap: 0.375rem;
+  padding: 0.5rem 0.875rem;
+  border-radius: 8px;
+  background: transparent;
+  border: 1px solid transparent;
+  color: #64748b;
+  font-weight: 600;
   font-size: 0.875rem;
   text-decoration: none;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.15s ease;
   cursor: pointer;
 }
 
 .nav-link:hover {
-  background: rgba(13, 148, 136, 0.1);
+  background: rgba(13, 148, 136, 0.06);
   color: #0d9488;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(13, 148, 136, 0.15);
+  transform: none;
+  box-shadow: none;
 }
 
 .nav-link-active {
-  background: linear-gradient(135deg, rgba(13, 148, 136, 0.15), rgba(45, 212, 191, 0.15));
-  border-color: rgba(13, 148, 136, 0.3);
+  background: rgba(13, 148, 136, 0.08);
+  border-color: transparent;
   color: #0d9488;
-  box-shadow: 0 2px 8px rgba(13, 148, 136, 0.2);
+  box-shadow: none;
+  font-weight: 700;
 }
 
 .nav-link svg {
-  width: 18px;
-  height: 18px;
+  width: 16px;
+  height: 16px;
   stroke-width: 2;
 }
 
@@ -206,8 +209,8 @@ const masteryPercentage = computed(() => {
 
 .logo-wrapper {
   position: relative;
-  width: 48px;
-  height: 48px;
+  width: 36px;
+  height: 36px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -218,33 +221,33 @@ const masteryPercentage = computed(() => {
   position: absolute;
   width: 100%;
   height: 100%;
-  border-radius: 50%;
-  background: linear-gradient(135deg, rgba(13, 148, 136, 0.15), rgba(45, 212, 191, 0.15));
-  backdrop-filter: blur(10px);
-  border: 2px solid rgba(13, 148, 136, 0.3);
-  box-shadow: 0 4px 12px rgba(13, 148, 136, 0.2);
+  border-radius: 8px;
+  background: linear-gradient(135deg, rgba(13, 148, 136, 0.1), rgba(45, 212, 191, 0.1));
+  backdrop-filter: blur(8px);
+  border: 1.5px solid rgba(13, 148, 136, 0.2);
+  box-shadow: 0 2px 6px rgba(13, 148, 136, 0.1);
 }
 
 .logo-icon {
-  width: 24px;
-  height: 24px;
+  width: 20px;
+  height: 20px;
   color: #0d9488;
   stroke-width: 2;
-  filter: drop-shadow(0 2px 4px rgba(13, 148, 136, 0.3));
+  filter: drop-shadow(0 1px 2px rgba(13, 148, 136, 0.2));
   z-index: 1;
 }
 
 .title-section {
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
+  gap: 0.125rem;
 }
 
 .header-title {
   margin: 0;
-  font-size: 1.5rem;
-  font-weight: 900;
-  letter-spacing: -0.02em;
+  font-size: 1.125rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
   line-height: 1;
 }
 
@@ -256,11 +259,12 @@ const masteryPercentage = computed(() => {
 }
 
 .header-subtitle {
-  font-size: 0.75rem;
-  color: #475569;
+  font-size: 0.6875rem;
+  color: #64748b;
   font-weight: 500;
-  letter-spacing: 0.01em;
+  letter-spacing: 0;
   margin: 0;
+  display: none;
 }
 
 .header-stats {
@@ -272,19 +276,19 @@ const masteryPercentage = computed(() => {
 .stat-card {
   display: flex;
   align-items: center;
-  gap: 0.625rem;
-  padding: 0.625rem 0.875rem;
-  border-radius: 12px;
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.4);
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 8px;
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  transition: all 0.15s ease;
   cursor: default;
-  min-width: 110px;
+  min-width: 90px;
 }
 
 .stat-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  transform: none;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
 .stat-primary {
@@ -300,14 +304,14 @@ const masteryPercentage = computed(() => {
 }
 
 .stat-icon-wrapper {
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
 }
 
 .stat-primary .stat-icon-wrapper {
@@ -323,8 +327,8 @@ const masteryPercentage = computed(() => {
 }
 
 .stat-icon {
-  width: 16px;
-  height: 16px;
+  width: 14px;
+  height: 14px;
   color: white;
   stroke-width: 2;
 }
@@ -336,8 +340,8 @@ const masteryPercentage = computed(() => {
 }
 
 .stat-value {
-  font-size: 1.125rem;
-  font-weight: 900;
+  font-size: 1rem;
+  font-weight: 800;
   background: linear-gradient(135deg, #0d9488 0%, #2dd4bf 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -347,88 +351,63 @@ const masteryPercentage = computed(() => {
 
 .stat-label {
   font-size: 0.625rem;
-  color: #475569;
-  font-weight: 700;
+  color: #64748b;
+  font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.03em;
 }
 
 /* Responsive Design */
 @media (max-width: 768px) {
   .app-header {
-    padding: 1rem;
+    padding: 0.625rem 1rem;
   }
 
   .header-content {
-    flex-direction: column;
-    align-items: flex-start;
     gap: 1rem;
   }
 
-  .nav-section {
-    width: 100%;
-    justify-content: flex-start;
+  .header-subtitle {
+    display: none;
   }
 
-  .nav-link {
+  .nav-section {
     flex: 1;
     justify-content: center;
   }
 
   .header-stats {
-    width: 100%;
-    justify-content: flex-start;
-  }
-
-  .stat-card {
-    flex: 1;
-    min-width: 100px;
+    display: none;
   }
 }
 
 @media (max-width: 480px) {
-  .logo-section {
-    gap: 0.75rem;
+  .app-header {
+    padding: 0.5rem 0.875rem;
   }
 
   .logo-wrapper {
-    width: 40px;
-    height: 40px;
+    width: 32px;
+    height: 32px;
   }
 
   .logo-icon {
-    font-size: 1.5rem;
+    width: 18px;
+    height: 18px;
   }
 
   .header-title {
-    font-size: 1.25rem;
+    font-size: 1rem;
   }
 
-  .header-subtitle {
-    font-size: 0.6875rem;
+  .nav-link {
+    padding: 0.4375rem 0.75rem;
+    font-size: 0.8125rem;
   }
 
-  .header-stats {
-    gap: 0.5rem;
-  }
-
-  .stat-card {
-    padding: 0.5rem 0.625rem;
-    min-width: 90px;
-  }
-
-  .stat-icon-wrapper {
-    width: 28px;
-    height: 28px;
-  }
-
-  .stat-icon {
+  .nav-link svg {
     width: 14px;
     height: 14px;
-  }
-
-  .stat-value {
-    font-size: 1rem;
   }
 }
 </style>

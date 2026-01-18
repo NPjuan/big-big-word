@@ -55,23 +55,107 @@
         <div class="title-row">
           <div class="title-left">
             <h1 class="word-title">{{ word.word }}</h1>
-            <div v-if="word.phonetic" class="word-phonetic">
-              <span class="phonetic-text">{{ word.phonetic }}</span>
-              <button
-                v-if="word.audioUrl"
-                class="audio-btn"
-                @click="playAudio"
-                aria-label="Play pronunciation"
+
+            <!-- Enhanced Phonetics Section -->
+            <div v-if="hasPhonetics()" class="phonetics-container">
+              <!-- Primary Phonetic (from word object) -->
+              <div v-if="word.phonetic" class="phonetic-item primary-phonetic">
+                <div class="phonetic-label">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <path
+                      d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
+                  </svg>
+                  <span>Phonetic</span>
+                </div>
+                <div class="phonetic-content">
+                  <span class="phonetic-text">{{ word.phonetic }}</span>
+                  <button
+                    class="audio-btn"
+                    @click="handlePlayAudio(word.audioUrl)"
+                    @keydown.enter="handlePlayAudio(word.audioUrl)"
+                    @keydown.space.prevent="handlePlayAudio(word.audioUrl)"
+                    :aria-label="`Play pronunciation: ${word.phonetic}`"
+                    tabindex="0"
+                  >
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                      <path
+                        d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                      />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Additional Phonetics from API -->
+              <div
+                v-if="wordData?.phonetics && wordData.phonetics.length > 0"
+                class="additional-phonetics"
               >
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                  <path
-                    d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"
-                    stroke-width="2"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                  />
-                </svg>
-              </button>
+                <div
+                  v-for="(phonetic, idx) in wordData.phonetics.slice(0, 2)"
+                  :key="idx"
+                  class="phonetic-item"
+                >
+                  <div class="phonetic-label">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                      <path
+                        d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                      />
+                    </svg>
+                    <span>{{ handleGetPhoneticLabel(phonetic, idx) }}</span>
+                  </div>
+                  <div class="phonetic-content">
+                    <span class="phonetic-text">{{ phonetic.text }}</span>
+                    <button
+                      v-if="phonetic.audio"
+                      class="audio-btn"
+                      @click="handlePlayAudio(phonetic.audio)"
+                      @keydown.enter="handlePlayAudio(phonetic.audio)"
+                      @keydown.space.prevent="handlePlayAudio(phonetic.audio)"
+                      :aria-label="`Play ${handleGetPhoneticLabel(phonetic, idx)} pronunciation`"
+                      tabindex="0"
+                    >
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <path
+                          d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"
+                          stroke-width="2"
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                        />
+                      </svg>
+                    </button>
+                    <button
+                      v-else
+                      class="audio-btn speech-btn"
+                      @click="handlePlayTextToSpeech(word.word)"
+                      @keydown.enter="handlePlayTextToSpeech(word.word)"
+                      @keydown.space.prevent="handlePlayTextToSpeech(word.word)"
+                      :aria-label="`Speak word using text-to-speech`"
+                      tabindex="0"
+                      title="Text-to-Speech"
+                    >
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <path
+                          d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"
+                          stroke-width="2"
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                        />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+              </div>
             </div>
             <!-- Part of Speech Tags -->
             <div v-if="word.partOfSpeech.length > 0" class="pos-tags">
@@ -430,7 +514,8 @@ import { ref, onMounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useWordStore } from '@/stores/wordStore'
 import { fetchWordData, type WordData } from '@/services/dictionaryApi'
-import type { Word } from '@/types/word.types'
+import type { Word, WordForms } from '@/types/word.types'
+import { playAudio, playTextToSpeech, getPhoneticLabel } from '@/utils/audioUtils'
 
 const route = useRoute()
 const router = useRouter()
@@ -447,12 +532,12 @@ const getMasteryLevel = (mastery: number): string => {
   return 'low'
 }
 
-const hasWordForms = (forms: any): boolean => {
+const hasWordForms = (forms: WordForms | undefined): boolean => {
   if (!forms) return false
   return Object.values(forms).some((value) => value !== undefined && value !== null && value !== '')
 }
 
-const hasVerbForms = (forms: any): boolean => {
+const hasVerbForms = (forms: WordForms | undefined): boolean => {
   if (!forms) return false
   return !!(
     forms.pastTense ||
@@ -462,17 +547,17 @@ const hasVerbForms = (forms: any): boolean => {
   )
 }
 
-const hasNounForms = (forms: any): boolean => {
+const hasNounForms = (forms: WordForms | undefined): boolean => {
   if (!forms) return false
   return !!(forms.plural || forms.singular)
 }
 
-const hasAdjectiveForms = (forms: any): boolean => {
+const hasAdjectiveForms = (forms: WordForms | undefined): boolean => {
   if (!forms) return false
   return !!(forms.comparative || forms.superlative)
 }
 
-const hasRelatedForms = (forms: any): boolean => {
+const hasRelatedForms = (forms: WordForms | undefined): boolean => {
   if (!forms) return false
   return !!(forms.noun || forms.verb || forms.adjective || forms.adverb)
 }
@@ -504,13 +589,29 @@ const getFirstAntonyms = (): string[] => {
   return []
 }
 
-const playAudio = () => {
-  if (word.value?.audioUrl) {
-    const audio = new Audio(word.value.audioUrl)
-    audio.play().catch((error) => {
-      console.error('Failed to play audio:', error)
-    })
-  }
+const hasPhonetics = (): boolean => {
+  return !!(
+    word.value?.phonetic ||
+    (wordData.value?.phonetics && wordData.value.phonetics.length > 0)
+  )
+}
+
+// Wrapper functions to use imported utilities with component context
+const handlePlayAudio = (audioUrl?: string) => {
+  const url = audioUrl || word.value?.audioUrl
+  const fallbackText = word.value?.word || ''
+  playAudio(url, fallbackText)
+}
+
+const handlePlayTextToSpeech = (text: string) => {
+  playTextToSpeech(text)
+}
+
+const handleGetPhoneticLabel = (
+  phonetic: { audio?: string; text?: string },
+  index: number,
+): string => {
+  return getPhoneticLabel(phonetic, index)
 }
 
 const goBack = () => {
@@ -714,43 +815,149 @@ onMounted(() => {
   line-height: 1;
 }
 
-.word-phonetic {
+/* Enhanced Phonetics Container - Claymorphism Style */
+.phonetics-container {
   display: flex;
-  align-items: center;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1rem;
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.08), rgba(96, 165, 250, 0.08));
+  border: 3px solid rgba(59, 130, 246, 0.2);
+  border-radius: 20px;
+  box-shadow:
+    0 4px 12px rgba(59, 130, 246, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+
+.primary-phonetic {
+  padding-bottom: 0.75rem;
+  border-bottom: 2px solid rgba(59, 130, 246, 0.15);
+}
+
+.additional-phonetics {
+  display: flex;
+  flex-direction: column;
   gap: 0.625rem;
 }
 
+.phonetic-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.phonetic-label {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  color: #3b82f6;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.phonetic-label svg {
+  width: 14px;
+  height: 14px;
+  stroke-width: 2.5;
+  color: #3b82f6;
+}
+
+.phonetic-content {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 0.625rem 0.875rem;
+  background: white;
+  border: 2px solid rgba(59, 130, 246, 0.2);
+  border-radius: 14px;
+  box-shadow:
+    0 2px 8px rgba(59, 130, 246, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  transition: all 0.2s ease;
+}
+
+.phonetic-content:hover {
+  transform: translateY(-1px);
+  box-shadow:
+    0 4px 12px rgba(59, 130, 246, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
 .phonetic-text {
+  flex: 1;
   font-family: 'SF Mono', 'Monaco', 'Courier New', monospace;
-  font-size: 0.9375rem;
-  color: #475569;
-  font-weight: 500;
+  font-size: 1rem;
+  color: #1e293b;
+  font-weight: 600;
+  letter-spacing: 0.02em;
 }
 
 .audio-btn {
-  width: 28px;
-  height: 28px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
-  border: none;
-  background: linear-gradient(135deg, #ea580c, #fb923c);
+  border: 3px solid rgba(249, 115, 22, 0.3);
+  background: linear-gradient(135deg, #f97316, #fb923c);
   color: white;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.2s ease;
-  box-shadow: 0 2px 8px rgba(234, 88, 12, 0.3);
+  transition: all 0.2s ease-out;
+  box-shadow:
+    0 4px 12px rgba(249, 115, 22, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  flex-shrink: 0;
 }
 
 .audio-btn:hover {
-  transform: scale(1.1);
-  box-shadow: 0 4px 12px rgba(234, 88, 12, 0.4);
+  transform: scale(1.08) translateY(-2px);
+  box-shadow:
+    0 6px 16px rgba(249, 115, 22, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  border-color: rgba(249, 115, 22, 0.5);
+}
+
+.audio-btn:active {
+  transform: scale(0.95) translateY(0);
+  box-shadow:
+    0 2px 6px rgba(249, 115, 22, 0.3),
+    inset 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.audio-btn:focus-visible {
+  outline: 3px solid rgba(249, 115, 22, 0.5);
+  outline-offset: 2px;
 }
 
 .audio-btn svg {
-  width: 16px;
-  height: 16px;
-  stroke-width: 2;
+  width: 18px;
+  height: 18px;
+  stroke-width: 2.5;
+}
+
+/* Speech Button Variant (for text-to-speech fallback) */
+.speech-btn {
+  background: linear-gradient(135deg, #8b5cf6, #a78bfa);
+  border-color: rgba(139, 92, 246, 0.3);
+  box-shadow:
+    0 4px 12px rgba(139, 92, 246, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.speech-btn:hover {
+  box-shadow:
+    0 6px 16px rgba(139, 92, 246, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  border-color: rgba(139, 92, 246, 0.5);
+}
+
+.speech-btn:active {
+  box-shadow:
+    0 2px 6px rgba(139, 92, 246, 0.3),
+    inset 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 /* Part of Speech Tags */
@@ -1276,18 +1483,22 @@ onMounted(() => {
     font-size: 1.875rem;
   }
 
+  .phonetics-container {
+    padding: 0.875rem;
+  }
+
   .phonetic-text {
-    font-size: 1rem;
+    font-size: 0.9375rem;
   }
 
   .audio-btn {
-    width: 28px;
-    height: 28px;
+    width: 32px;
+    height: 32px;
   }
 
   .audio-btn svg {
-    width: 14px;
-    height: 14px;
+    width: 16px;
+    height: 16px;
   }
 
   .mastery-info {
@@ -1341,6 +1552,23 @@ onMounted(() => {
 
   .word-title {
     font-size: 1.5rem;
+  }
+
+  .phonetics-container {
+    padding: 0.75rem;
+  }
+
+  .phonetic-content {
+    padding: 0.5rem 0.75rem;
+  }
+
+  .phonetic-text {
+    font-size: 0.875rem;
+  }
+
+  .audio-btn {
+    width: 32px;
+    height: 32px;
   }
 
   .mastery-value {

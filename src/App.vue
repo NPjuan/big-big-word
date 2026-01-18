@@ -14,6 +14,16 @@
   box-sizing: border-box;
 }
 
+html,
+body {
+  width: 100%;
+  height: 100vh;
+  height: 100dvh; /* Use dvh for better mobile support */
+  overflow: hidden; /* Prevent page scroll */
+  position: fixed; /* Lock the page */
+  inset: 0;
+}
+
 body {
   font-family:
     'Inter',
@@ -26,6 +36,12 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+#app {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
 }
 
 /* Custom Scrollbar */
@@ -86,8 +102,8 @@ body {
   border-radius: 4px;
 }
 
-/* Smooth Scroll */
-html {
+/* Smooth Scroll - Only for content areas */
+.scrollable-content {
   scroll-behavior: smooth;
 }
 

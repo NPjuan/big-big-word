@@ -10,24 +10,6 @@
 
     <!-- Main Content -->
     <div class="content-wrapper">
-      <!-- Page Title -->
-      <div class="page-header glass-card">
-        <div class="header-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
-            <path
-              d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            />
-          </svg>
-        </div>
-        <div class="header-text">
-          <h1 class="page-title">Word History</h1>
-          <p class="page-subtitle">Review and manage all your learned vocabulary</p>
-        </div>
-      </div>
-
       <!-- Word Table Section -->
       <section class="table-section glass-card">
         <WordTable />
@@ -174,8 +156,8 @@ onUnmounted(() => {
   position: relative;
   z-index: 1;
   max-width: 1600px;
-  margin: 0 auto;
-  padding: 1.5rem;
+  margin: 100px auto;
+  padding: 100px 1.5rem 1.5rem 1.5rem;
 }
 
 /* ===== Glass Card Effect ===== */
@@ -209,60 +191,9 @@ onUnmounted(() => {
   border-color: rgba(13, 148, 136, 0.25);
 }
 
-/* ===== Page Header ===== */
-.page-header {
-  display: flex;
-  align-items: center;
-  gap: 1.5rem;
-  padding: 1.5rem 2rem;
-  margin-bottom: 1.5rem;
-  animation-delay: 0.1s;
-}
-
-.header-icon {
-  width: 64px;
-  height: 64px;
-  border-radius: 16px;
-  background: linear-gradient(135deg, #0d9488 0%, #2dd4bf 100%);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 8px 24px rgba(13, 148, 136, 0.3);
-  flex-shrink: 0;
-}
-
-.header-icon svg {
-  width: 32px;
-  height: 32px;
-  color: white;
-  stroke-width: 2;
-}
-
-.header-text {
-  flex: 1;
-}
-
-.page-title {
-  font-size: 2rem;
-  font-weight: 900;
-  background: linear-gradient(135deg, #0d9488 0%, #2dd4bf 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  margin: 0 0 0.5rem 0;
-  letter-spacing: -0.02em;
-}
-
-.page-subtitle {
-  font-size: 1rem;
-  color: #475569;
-  font-weight: 500;
-  margin: 0;
-}
-
 /* ===== Table Section ===== */
 .table-section {
-  animation-delay: 0.2s;
+  animation-delay: 0.1s;
 }
 
 /* ===== Scroll to Top Button ===== */
@@ -310,43 +241,20 @@ onUnmounted(() => {
 @media (max-width: 1680px) {
   .content-wrapper {
     max-width: 1440px;
-    padding: 1.25rem;
+    padding: 0 1.25rem 1.25rem 1.25rem;
   }
 }
 
 @media (max-width: 1440px) {
   .content-wrapper {
     max-width: 1200px;
-    padding: 1rem;
+    padding: 0 1rem 1rem 1rem;
   }
 }
 
 @media (max-width: 768px) {
   .content-wrapper {
-    padding: 1rem;
-  }
-
-  .page-header {
-    padding: 1.25rem 1.5rem;
-    gap: 1rem;
-  }
-
-  .header-icon {
-    width: 56px;
-    height: 56px;
-  }
-
-  .header-icon svg {
-    width: 28px;
-    height: 28px;
-  }
-
-  .page-title {
-    font-size: 1.5rem;
-  }
-
-  .page-subtitle {
-    font-size: 0.875rem;
+    padding: 0 1rem 1rem 1rem;
   }
 
   .scroll-top-btn {
@@ -364,13 +272,7 @@ onUnmounted(() => {
 
 @media (max-width: 480px) {
   .content-wrapper {
-    padding: 0.75rem;
-  }
-
-  .page-header {
-    padding: 1rem;
-    flex-direction: column;
-    align-items: flex-start;
+    padding: 0 0.75rem 0.75rem 0.75rem;
   }
 
   .glass-card {

@@ -1,4 +1,4 @@
-import type { Word } from '@/types/word.types'
+import type { Word, ChineseMeaning, EnglishMeaning, Etymology, WordRoot } from '@/types/word.types'
 
 /**
  * Export words to CSV format
@@ -33,7 +33,7 @@ export const exportWordsToCSV = (words: Word[]): string => {
   }
 
   // Helper function to format meanings
-  const formatMeanings = (meanings: any[]): string => {
+  const formatMeanings = (meanings: ChineseMeaning[] | EnglishMeaning[]): string => {
     return meanings
       .map((m) => {
         const defs = m.definitions.join('; ')
@@ -43,8 +43,8 @@ export const exportWordsToCSV = (words: Word[]): string => {
   }
 
   // Helper function to format etymology
-  const formatEtymology = (etymology: any): string => {
-    const roots = etymology.roots.map((r: any) => `${r.root} (${r.meaning})`).join('; ')
+  const formatEtymology = (etymology: Etymology): string => {
+    const roots = etymology.roots.map((r: WordRoot) => `${r.root} (${r.meaning})`).join('; ')
     return `Origin: ${etymology.origin}. Roots: ${roots}`
   }
 

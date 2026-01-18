@@ -229,11 +229,11 @@
                     <button
                       v-if="word.audioUrl"
                       class="audio-btn"
-                      @click="playAudio(word.audioUrl)"
+                      @click="playAudio(word.audioUrl, word)"
                       aria-label="Play pronunciation"
                       tabindex="0"
-                      @keydown.enter="playAudio(word.audioUrl)"
-                      @keydown.space.prevent="playAudio(word.audioUrl)"
+                      @keydown.enter="playAudio(word.audioUrl, word)"
+                      @keydown.space.prevent="playAudio(word.audioUrl, word)"
                     >
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
                         <path
@@ -494,6 +494,7 @@ import { useRouter } from 'vue-router'
 import { useWordStore } from '@/stores/wordStore'
 import type { Word } from '@/types/word.types'
 import { exportToCSV, exportToJSON } from '@/utils/wordExport'
+import { playAudio as playAudioUtil } from '@/utils/audioUtils'
 
 const router = useRouter()
 const wordStore = useWordStore()
@@ -535,7 +536,12 @@ const paginatedWords = computed(() => {
 const formatDate = (dateString: string): string => {
   const date = new Date(dateString)
   const now = new Date()
-  const diffInMs = now.getTime() - date.getTime()
+
+  // Reset time to midnight for accurate day comparison
+  const dateOnly = new Date(date.getFullYear(), date.getMonth(), date.getDate())
+  const nowOnly = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+
+  const diffInMs = nowOnly.getTime() - dateOnly.getTime()
   const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24))
 
   if (diffInDays === 0) return 'Today'
@@ -598,11 +604,9 @@ const scrollToTop = () => {
   window.scrollTo({ top: 0, behavior: 'smooth' })
 }
 
-const playAudio = (audioUrl: string) => {
-  const audio = new Audio(audioUrl)
-  audio.play().catch((error) => {
-    console.error('Failed to play audio:', error)
-  })
+const playAudio = (audioUrl: string, word?: Word) => {
+  const fallbackText = word?.word || ''
+  playAudioUtil(audioUrl, fallbackText)
 }
 
 const toggleExportMenu = () => {

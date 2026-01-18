@@ -1,12 +1,12 @@
 <template>
   <div class="main-layout">
-    <!-- Fixed Header -->
-    <div class="sticky-header-wrapper">
+    <!-- Fixed Header - Pinned to top -->
+    <header class="fixed-header">
       <AppHeader />
-    </div>
+    </header>
 
-    <!-- Page Content with Transitions -->
-    <main class="page-content">
+    <!-- Scrollable Content Area -->
+    <main class="scrollable-content">
       <router-view v-slot="{ Component, route }">
         <transition name="page" mode="out-in">
           <component :is="Component" :key="route.path" />
@@ -21,30 +21,36 @@ import AppHeader from '@/components/layout/AppHeader.vue'
 </script>
 
 <style scoped>
-/* ===== Main Layout ===== */
+/* ===== Main Layout - Full Viewport ===== */
 .main-layout {
-  min-height: 100vh;
-  position: relative;
+  width: 100%;
+  height: 100vh;
+  height: 100dvh; /* Better mobile support */
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
   background: linear-gradient(135deg, #f0fdfa 0%, #e0f2fe 50%, #fef3c7 100%);
   background-attachment: fixed;
 }
 
-/* ===== Sticky Header ===== */
-.sticky-header-wrapper {
+/* ===== Fixed Header - Pinned to Top ===== */
+.fixed-header {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   z-index: 100;
-  padding: 1rem 1.5rem;
+  padding: 0;
   background: linear-gradient(
     to bottom,
     rgba(240, 253, 250, 0.98) 0%,
     rgba(240, 253, 250, 0.95) 80%,
-    transparent 100%
+    rgba(240, 253, 250, 0.9) 100%
   );
   backdrop-filter: blur(20px);
-  animation: slideDown 0.6s ease-out;
+  border-bottom: 1px solid rgba(13, 148, 136, 0.1);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+  animation: slideDown 0.6s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 @keyframes slideDown {
@@ -58,13 +64,36 @@ import AppHeader from '@/components/layout/AppHeader.vue'
   }
 }
 
-/* ===== Page Content ===== */
-.page-content {
-  position: relative;
-  z-index: 1;
-  padding-top: 120px; /* Space for header */
-  padding-bottom: 2rem;
-  min-height: 100vh;
+/* ===== Scrollable Content Area ===== */
+.scrollable-content {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 0;
+  scroll-behavior: smooth;
+  /* Custom scrollbar styling */
+  scrollbar-width: thin;
+  scrollbar-color: rgba(13, 148, 136, 0.5) rgba(13, 148, 136, 0.05);
+}
+
+/* Webkit scrollbar for content area */
+.scrollable-content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.scrollable-content::-webkit-scrollbar-track {
+  background: rgba(13, 148, 136, 0.05);
+  border-radius: 10px;
+}
+
+.scrollable-content::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, #0d9488 0%, #2dd4bf 100%);
+  border-radius: 10px;
+  transition: all 0.2s ease;
+}
+
+.scrollable-content::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, #2dd4bf 0%, #0d9488 100%);
 }
 
 /* ===== Page Transitions ===== */
@@ -85,22 +114,22 @@ import AppHeader from '@/components/layout/AppHeader.vue'
 
 /* ===== Responsive Design ===== */
 @media (max-width: 768px) {
-  .sticky-header-wrapper {
-    padding: 0.75rem 1rem;
+  .fixed-header {
+    padding: 0;
   }
 
-  .page-content {
-    padding-top: 100px;
+  .scrollable-content {
+    padding: 0;
   }
 }
 
 @media (max-width: 480px) {
-  .sticky-header-wrapper {
-    padding: 0.625rem 0.875rem;
+  .fixed-header {
+    padding: 0;
   }
 
-  .page-content {
-    padding-top: 90px;
+  .scrollable-content {
+    padding: 0;
   }
 }
 </style>

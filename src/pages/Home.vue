@@ -17,9 +17,9 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
               <path
                 d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
               />
             </svg>
           </div>
@@ -28,15 +28,19 @@
         </div>
 
         <div v-else class="card-stack-container">
-          <WordCard
-            v-for="(word, index) in displayWords"
-            :key="word.id"
-            :word="word"
-            :index="index"
-            :total="displayWords.length"
-            @swipe-left="handleSwipeLeft"
-            @swipe-right="handleSwipeRight"
-          />
+          <TransitionGroup name="card-stack">
+            <WordCard
+              v-for="(word, index) in displayWords"
+              :key="word.id"
+              :word="word"
+              :index="index"
+              :total="displayWords.length"
+              :first-card-drag-x="firstCardDragX"
+              @swipe-left="handleSwipeLeft"
+              @swipe-right="handleSwipeRight"
+              @drag="handleDrag"
+            />
+          </TransitionGroup>
         </div>
       </section>
     </div>
@@ -57,40 +61,123 @@ import CompactWordInput from '@/components/word-input/CompactWordInput.vue'
 import WordCard from '@/components/word-display/WordCard.vue'
 
 const wordStore = useWordStore()
-const currentIndex = ref(0)
+const displayWords = ref<any[]>([])
+const isAnimating = ref(false)
+const firstCardDragX = ref(0)
 
-const displayWords = computed(() => {
-  return wordStore.words.slice(currentIndex.value, currentIndex.value + 3)
-})
-
-const handleSwipeLeft = () => {
-  // Mark as "need review" or skip
-  if (currentIndex.value < wordStore.wordCount - 1) {
-    currentIndex.value++
-  } else {
-    currentIndex.value = 0 // Loop back
+// Initialize display words with cycling capability
+const initializeDisplayWords = () => {
+  if (wordStore.wordCount === 0) {
+    displayWords.value = []
+    return
   }
+
+  // Show up to 4 cards, cycling through all words
+  const maxCards = Math.min(4, wordStore.wordCount)
+  displayWords.value = wordStore.words.slice(0, maxCards).map((word, index) => ({
+    ...word,
+    displayIndex: index,
+  }))
 }
 
 const handleSwipeRight = () => {
-  // Mark as "mastered" or like
-  if (currentIndex.value < wordStore.wordCount - 1) {
-    currentIndex.value++
-  } else {
-    currentIndex.value = 0 // Loop back
-  }
+  if (isAnimating.value || wordStore.wordCount === 0) return
+
+  isAnimating.value = true
+
+  // Wait for card leaving animation to complete (200ms for smoother transition)
+  setTimeout(() => {
+    const removedCard = displayWords.value.shift()
+    if (removedCard && wordStore.wordCount > 1) {
+      // Find the next word to show
+      const currentIds = displayWords.value.map((w) => w.id)
+      const nextWord = wordStore.words.find(
+        (w) => !currentIds.includes(w.id) && w.id !== removedCard.id,
+      )
+
+      if (nextWord) {
+        displayWords.value.push({
+          ...nextWord,
+          displayIndex: displayWords.value.length,
+        })
+      } else {
+        // If no new word, cycle back to the removed card
+        displayWords.value.push({
+          ...removedCard,
+          displayIndex: displayWords.value.length,
+        })
+      }
+    } else if (wordStore.wordCount === 1) {
+      // Single word: just re-add it
+      displayWords.value.push({
+        ...removedCard,
+        displayIndex: 0,
+      })
+    }
+
+    // Update display indices
+    displayWords.value.forEach((word, index) => {
+      word.displayIndex = index
+    })
+
+    isAnimating.value = false
+  }, 200)
+}
+const handleSwipeLeft = () => {
+  if (isAnimating.value || wordStore.wordCount === 0) return
+
+  isAnimating.value = true
+
+  // Wait for card leaving animation to complete (200ms for smoother transition)
+  setTimeout(() => {
+    const removedCard = displayWords.value.shift()
+    if (removedCard && wordStore.wordCount > 1) {
+      // Find the next word to show
+      const currentIds = displayWords.value.map((w) => w.id)
+      const nextWord = wordStore.words.find(
+        (w) => !currentIds.includes(w.id) && w.id !== removedCard.id,
+      )
+
+      if (nextWord) {
+        displayWords.value.push({
+          ...nextWord,
+          displayIndex: displayWords.value.length,
+        })
+      } else {
+        // If no new word, cycle back to the removed card
+        displayWords.value.push({
+          ...removedCard,
+          displayIndex: displayWords.value.length,
+        })
+      }
+    } else if (wordStore.wordCount === 1) {
+      // Single word: just re-add it
+      displayWords.value.push({
+        ...removedCard,
+        displayIndex: 0,
+      })
+    }
+
+    // Update display indices
+    displayWords.value.forEach((word, index) => {
+      word.displayIndex = index
+    })
+
+    isAnimating.value = false
+  }, 200)
+}
+const handleDrag = (dragX: number) => {
+  firstCardDragX.value = dragX
 }
 
 const handleWordAdded = () => {
-  // Reset to show new word
-  currentIndex.value = 0
+  // Reinitialize to show new word
+  initializeDisplayWords()
 }
 
 onMounted(() => {
-  // Load words if needed
-  if (wordStore.wordCount === 0) {
-    // Could trigger initial load
-  }
+  // Initialize display words
+  initializeDisplayWords()
 })
 </script>
 
@@ -191,16 +278,23 @@ onMounted(() => {
   z-index: 1;
   max-width: 1200px;
   margin: 0 auto;
-  padding: 1.5rem;
+  padding: 0;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 /* ===== Learning Section ===== */
 .learning-section {
-  min-height: calc(100vh - 160px);
+  width: 100%;
+  height: calc(100vh - 56px - 100px); /* viewport - header - input */
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 2rem 0;
+  padding: 0;
+  padding-top: 40px; /* Move cards down for better centering */
+  overflow: hidden;
 }
 
 /* ===== Empty State ===== */
@@ -251,10 +345,34 @@ onMounted(() => {
 .card-stack-container {
   position: relative;
   width: 100%;
-  max-width: 500px;
-  height: 600px;
+  max-width: 380px;
+  height: 460px;
   margin: 0 auto;
   perspective: 1000px;
+}
+
+/* ===== TransitionGroup Animations ===== */
+.card-stack-move {
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.card-stack-leave-active {
+  position: absolute;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 100 !important;
+}
+
+.card-stack-leave-to {
+  opacity: 0;
+}
+
+.card-stack-enter-active {
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.card-stack-enter-from {
+  opacity: 0;
+  transform: scale(0.9);
 }
 
 /* ===== Floating Input ===== */
@@ -330,17 +448,18 @@ onMounted(() => {
   }
 
   .content-wrapper {
-    padding: 1rem;
+    padding: 0;
   }
 
   .learning-section {
-    min-height: calc(100vh - 210px);
-    padding: 1rem 0;
+    height: calc(100vh - 56px - 100px);
+    padding: 0;
+    padding-top: 30px; /* Adjust for mobile */
   }
 
   .card-stack-container {
     max-width: 100%;
-    height: 500px;
+    height: 420px;
   }
 
   .floating-input-wrapper {
@@ -371,8 +490,12 @@ onMounted(() => {
     padding-bottom: 100px;
   }
 
+  .learning-section {
+    padding-top: 20px; /* Smaller adjustment for small screens */
+  }
+
   .card-stack-container {
-    height: 450px;
+    height: 380px;
   }
 
   .floating-input-wrapper {
