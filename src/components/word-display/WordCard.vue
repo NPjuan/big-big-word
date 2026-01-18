@@ -118,7 +118,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, type PropType } from 'vue'
+import { ref, computed, watch, type PropType } from 'vue'
 import type { Word } from '@/types/word.types'
 import { playAudio as playAudioUtil } from '@/utils/audioUtils'
 
@@ -229,7 +229,7 @@ const cardStyle = computed(() => {
     return {
       transform: `translate(${subtleX}px, ${subtleY}px) rotate(${subtleRotate}deg) scale(${subtleScale})`,
       zIndex,
-      opacity: props.index < 5 ? 1 : 0,
+      opacity: props.index < 4 ? 1 : 0,
       transition: 'all 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94)', // Smoother, slower easing
     }
   }
@@ -303,7 +303,14 @@ const handleDragStart = (e: MouseEvent | TouchEvent) => {
         emit('swipe-left')
       }
 
-      // Don't reset dragX/dragY here - let the leaving animation play
+      // Reset state after animation completes (250ms)
+      setTimeout(() => {
+        isLeaving.value = false
+        leaveDirection.value = null
+        dragX.value = 0
+        dragY.value = 0
+        swipeDirection.value = null
+      }, 250)
     } else {
       // Card returns to position
       dragX.value = 0
@@ -327,6 +334,21 @@ const handleDragStart = (e: MouseEvent | TouchEvent) => {
   document.addEventListener('touchmove', handleDragMove)
   document.addEventListener('touchend', handleDragEnd)
 }
+
+// Watch for word changes to reset card state
+watch(
+  () => props.word.id,
+  () => {
+    // Reset all state when word changes
+    isDragging.value = false
+    isRevealed.value = false
+    isLeaving.value = false
+    leaveDirection.value = null
+    dragX.value = 0
+    dragY.value = 0
+    swipeDirection.value = null
+  },
+)
 </script>
 
 <style scoped>

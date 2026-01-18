@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import type { Word } from '@/types/word.types'
 import { fetchWordData, generateChineseMeanings } from '@/services/dictionaryApi'
+import { defaultWords } from '@/data/defaultWords'
 
 export const useWordStore = defineStore('word', () => {
   // State
@@ -26,6 +27,10 @@ export const useWordStore = defineStore('word', () => {
       const stored = localStorage.getItem('big-big-words')
       if (stored) {
         words.value = JSON.parse(stored)
+      } else {
+        // Load default words if no saved words exist
+        words.value = [...defaultWords]
+        saveWords() // Save default words to localStorage
       }
     } catch (err) {
       console.error('Failed to load words:', err)
