@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Big Big Word - 单词本</title>
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <div class="popup-container">
+      <!-- Header -->
+      <div class="popup-header">
+        <h1 class="popup-title">📚 Big Big Word</h1>
+        <div class="popup-stats">
+          <span class="stat-item">
+            <span class="stat-label">单词数</span>
+            <span class="stat-value" id="word-count">0</span>
+          </span>
+        </div>
+      </div>
+
+      <!-- Add Word Section -->
+      <div class="add-word-section">
+        <input
+          type="text"
+          id="word-input"
+          class="word-input"
+          placeholder="输入单词添加到单词本..."
+          autocomplete="off"
+        />
+        <button id="add-word-btn" class="add-word-btn">添加</button>
+      </div>
+
+      <!-- Word List -->
+      <div class="word-list-container">
+        <div id="loading" class="loading" style="display: none">加载中...</div>
+        <div id="empty-state" class="empty-state" style="display: none">
+          <p>📖 还没有单词</p>
+          <p class="empty-hint">在网页上选中单词即可添加</p>
+        </div>
+        <div id="word-list" class="word-list"></div>
+      </div>
+
+      <!-- Footer -->
+      <div class="popup-footer">
+        <button id="open-app-btn" class="footer-btn">🎴 打开卡片学习</button>
+        <button id="clear-all-btn" class="footer-btn footer-btn-danger">🗑️ 清空单词本</button>
+      </div>
+    </div>
+
+    <script src="../lib/api.js"></script>
+    <script src="popup.js"></script>
+  </body>
+</html>

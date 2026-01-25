@@ -27,6 +27,13 @@ Big Big Word is a modern, AI-powered vocabulary learning system designed to help
 - 🎯 **Smart Learning** - Personalized learning experience
 - 📱 **Responsive Design** - Perfect on desktop, tablet, and mobile
 - ⚡ **Fast & Modern** - Built with Vue 3 + Vite + TypeScript
+- 🔌 **Chrome Extension** - Select words on any webpage to translate and save
+
+### 🔌 Chrome Extension Available!
+
+Now you can use Big Big Word as a Chrome browser extension! Select any word on any webpage to see instant translations and add words to your vocabulary collection.
+
+**👉 [Install Chrome Extension](./extension/INSTALL.md)** | **[Extension Documentation](./extension/README.md)**
 
 ---
 
@@ -40,9 +47,41 @@ Big Big Word is a modern, AI-powered vocabulary learning system designed to help
 - ✅ **Dual Language Support** - English and Chinese definitions with automatic translation
 - ✅ **Chinese Translation** - Powered by MyMemory Translation API
 - ✅ **Etymology Analysis** - AI-generated word roots and origins
-- ✅ **Mastery Tracking** - Visual progress indicators
+- ✅ **Mastery Tracking** - Visual progress indicators with smart learning algorithm
 - ✅ **Smart Search** - Real-time filtering and sorting
 - ✅ **Export Functionality** - Export words to CSV or JSON format
+- ✅ **Interactive Card Learning** - Swipe-based learning with mastery progression
+
+### 🎯 Learning System
+
+**Swipe-Based Learning**
+
+The card learning interface uses an intuitive swipe mechanism to track your progress:
+
+- **Swipe Right (✓)** - "I know this word!"
+  - Increases mastery by **+10%**
+  - Increments review count
+  - Updates last reviewed time
+  - Reach 80% to mark as "Mastered"
+
+- **Swipe Left (✗)** - "Need more practice"
+  - Decreases mastery by **-5%**
+  - Increments review count
+  - Updates last reviewed time
+  - Encourages continued learning
+
+**Mastery Levels**
+
+- 🟢 **High (80-100%)** - Mastered words
+- 🟠 **Medium (50-79%)** - Learning in progress
+- 🔴 **Low (0-49%)** - Needs more practice
+
+**Tips for Effective Learning**
+
+1. Double-click cards to reveal blurred content
+2. Click phonetic buttons to hear pronunciation
+3. Review words regularly to maintain mastery
+4. Use the table view to track overall progress
 
 ### UI/UX Features
 
@@ -171,6 +210,12 @@ big-big-word/
 │   ├── types/              # TypeScript types
 │   ├── router/             # Vue Router config
 │   └── App.vue             # Root component
+├── extension/              # Chrome Extension
+│   ├── manifest.json       # Extension config
+│   ├── background.js       # Background service worker
+│   ├── content.js          # Content script
+│   ├── popup/              # Extension popup
+│   └── README.md           # Extension docs
 ├── openspec/               # OpenSpec documentation
 ├── public/                 # Static assets
 └── README.md              # This file

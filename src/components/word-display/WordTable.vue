@@ -32,6 +32,38 @@
       </div>
 
       <div class="header-right">
+        <!-- View Toggle -->
+        <div class="view-toggle">
+          <button
+            class="toggle-btn"
+            :class="{ active: viewMode === 'grid' }"
+            @click="handleViewChange('grid')"
+            aria-label="Grid view"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <path
+                d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"
+                stroke-width="2"
+              />
+            </svg>
+          </button>
+          <button
+            class="toggle-btn active"
+            :class="{ active: viewMode === 'table' }"
+            @click="handleViewChange('table')"
+            aria-label="Table view"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <path
+                d="M4 6h16M4 12h16M4 18h16"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+          </button>
+        </div>
+
         <div class="search-wrapper">
           <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
             <path
@@ -66,67 +98,6 @@
               />
             </svg>
           </button>
-        </div>
-
-        <div v-if="wordStore.wordCount > 0" class="export-dropdown">
-          <button
-            class="export-btn"
-            @click="toggleExportMenu"
-            :disabled="isExporting"
-            aria-label="Export words"
-            tabindex="0"
-          >
-            <svg
-              v-if="!isExporting"
-              class="btn-icon"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-            >
-              <path
-                d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              />
-            </svg>
-            <div v-else class="btn-spinner"></div>
-            <span>Export</span>
-          </button>
-
-          <transition name="dropdown-fade">
-            <div v-if="showExportMenu" class="export-menu">
-              <button class="menu-item" @click="handleExportCSV">
-                <svg class="menu-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                  <path
-                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                    stroke-width="2"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                  />
-                </svg>
-                <div class="menu-content">
-                  <div class="menu-title">Export as CSV</div>
-                  <div class="menu-subtitle">For spreadsheet apps</div>
-                </div>
-              </button>
-
-              <button class="menu-item" @click="handleExportJSON">
-                <svg class="menu-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                  <path
-                    d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"
-                    stroke-width="2"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                  />
-                </svg>
-                <div class="menu-content">
-                  <div class="menu-title">Export as JSON</div>
-                  <div class="menu-subtitle">For backup & programmatic use</div>
-                </div>
-              </button>
-            </div>
-          </transition>
         </div>
       </div>
     </div>
@@ -467,24 +438,6 @@
         </div>
       </div>
     </transition>
-
-    <!-- Export Success Toast -->
-    <transition name="toast-fade">
-      <div v-if="showExportSuccess" class="toast toast-success">
-        <svg class="toast-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-          <path
-            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          />
-        </svg>
-        <span>
-          Successfully exported {{ wordStore.wordCount }}
-          {{ wordStore.wordCount === 1 ? 'word' : 'words' }} as {{ exportFormat.toUpperCase() }}!
-        </span>
-      </div>
-    </transition>
   </div>
 </template>
 
@@ -493,21 +446,17 @@ import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useWordStore } from '@/stores/wordStore'
 import type { Word } from '@/types/word.types'
-import { exportToCSV, exportToJSON } from '@/utils/wordExport'
 import { playAudio as playAudioUtil } from '@/utils/audioUtils'
 
 const router = useRouter()
 const wordStore = useWordStore()
 
 const search = ref('')
+const viewMode = ref<'grid' | 'table'>('table')
 const currentPage = ref(1)
 const itemsPerPage = 10
 const deleteDialog = ref(false)
 const wordToDelete = ref<Word | null>(null)
-const showExportMenu = ref(false)
-const isExporting = ref(false)
-const showExportSuccess = ref(false)
-const exportFormat = ref<'csv' | 'json'>('csv')
 const expandedMeanings = ref<Set<string>>(new Set())
 
 const filteredWords = computed(() => {
@@ -609,10 +558,6 @@ const playAudio = (audioUrl: string, word?: Word) => {
   playAudioUtil(audioUrl, fallbackText)
 }
 
-const toggleExportMenu = () => {
-  showExportMenu.value = !showExportMenu.value
-}
-
 const handleDelete = (word: Word) => {
   wordToDelete.value = word
   deleteDialog.value = true
@@ -626,51 +571,18 @@ const confirmDelete = () => {
   }
 }
 
-const handleExportCSV = async () => {
-  try {
-    isExporting.value = true
-    exportFormat.value = 'csv'
-    showExportMenu.value = false
-
-    await new Promise((resolve) => setTimeout(resolve, 300))
-    exportToCSV(wordStore.words)
-
-    showExportSuccess.value = true
-    setTimeout(() => {
-      showExportSuccess.value = false
-    }, 3000)
-  } catch (error) {
-    console.error('Export to CSV failed:', error)
-  } finally {
-    isExporting.value = false
-  }
-}
-
-const handleExportJSON = async () => {
-  try {
-    isExporting.value = true
-    exportFormat.value = 'json'
-    showExportMenu.value = false
-
-    await new Promise((resolve) => setTimeout(resolve, 300))
-    exportToJSON(wordStore.words)
-
-    showExportSuccess.value = true
-    setTimeout(() => {
-      showExportSuccess.value = false
-    }, 3000)
-  } catch (error) {
-    console.error('Export to JSON failed:', error)
-  } finally {
-    isExporting.value = false
-  }
-}
-
 const handleClickOutside = (event: MouseEvent) => {
-  const target = event.target as HTMLElement
-  if (!target.closest('.export-dropdown')) {
-    showExportMenu.value = false
-  }
+  // Reserved for future use
+}
+
+// Emit event to parent to switch view mode
+const emit = defineEmits<{
+  (e: 'changeView', mode: 'grid' | 'table'): void
+}>()
+
+const handleViewChange = (mode: 'grid' | 'table') => {
+  viewMode.value = mode
+  emit('changeView', mode)
 }
 
 onMounted(() => {
@@ -765,6 +677,45 @@ onUnmounted(() => {
   max-width: 600px;
 }
 
+/* View Toggle */
+.view-toggle {
+  display: flex;
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 10px;
+  padding: 0.25rem;
+  gap: 0.25rem;
+}
+
+.toggle-btn {
+  width: 40px;
+  height: 40px;
+  border: none;
+  background: transparent;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  color: rgba(0, 0, 0, 0.5);
+}
+
+.toggle-btn svg {
+  width: 20px;
+  height: 20px;
+  stroke-width: 2;
+}
+
+.toggle-btn.active {
+  background: white;
+  color: #0d9488;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.toggle-btn:hover:not(.active) {
+  color: #0d9488;
+}
+
 /* Search */
 .search-wrapper {
   position: relative;
@@ -831,118 +782,6 @@ onUnmounted(() => {
   width: 12px;
   height: 12px;
   stroke-width: 2.5;
-}
-
-/* Export Dropdown */
-.export-dropdown {
-  position: relative;
-}
-
-.export-btn {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.75rem 1.25rem;
-  font-size: 0.875rem;
-  font-weight: 700;
-  color: white;
-  background: linear-gradient(135deg, #0d9488 0%, #2dd4bf 100%);
-  border: none;
-  border-radius: 12px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  box-shadow: 0 3px 12px rgba(13, 148, 136, 0.3);
-  white-space: nowrap;
-}
-
-.export-btn:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(13, 148, 136, 0.4);
-}
-
-.export-btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.btn-icon {
-  width: 16px;
-  height: 16px;
-  stroke-width: 2.5;
-}
-
-.btn-spinner {
-  width: 16px;
-  height: 16px;
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  border-top-color: white;
-  border-radius: 50%;
-  animation: spin 0.8s linear infinite;
-}
-
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-.export-menu {
-  position: absolute;
-  top: calc(100% + 0.5rem);
-  right: 0;
-  min-width: 260px;
-  background: white;
-  border-radius: 14px;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
-  border: 1px solid rgba(0, 0, 0, 0.08);
-  overflow: hidden;
-  z-index: 10;
-}
-
-.menu-item {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  gap: 0.875rem;
-  padding: 0.875rem 1rem;
-  border: none;
-  background: white;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  text-align: left;
-}
-
-.menu-item:hover {
-  background: rgba(13, 148, 136, 0.05);
-  cursor: pointer;
-}
-
-.menu-item:not(:last-child) {
-  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
-}
-
-.menu-icon {
-  width: 20px;
-  height: 20px;
-  color: #0d9488;
-  stroke-width: 2;
-  flex-shrink: 0;
-}
-
-.menu-content {
-  flex: 1;
-}
-
-.menu-title {
-  font-size: 0.875rem;
-  font-weight: 700;
-  color: #0f172a;
-  margin-bottom: 0.125rem;
-}
-
-.menu-subtitle {
-  font-size: 0.75rem;
-  color: #475569;
 }
 
 /* Empty State */
@@ -1599,36 +1438,6 @@ onUnmounted(() => {
   cursor: pointer;
 }
 
-/* Toast */
-.toast {
-  position: fixed;
-  top: 2rem;
-  right: 2rem;
-  display: flex;
-  align-items: center;
-  gap: 0.875rem;
-  padding: 1rem 1.5rem;
-  border-radius: 16px;
-  font-size: 0.9375rem;
-  font-weight: 600;
-  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.2);
-  z-index: 1000;
-  max-width: 400px;
-}
-
-.toast-success {
-  background: linear-gradient(135deg, rgba(34, 197, 94, 0.95), rgba(22, 163, 74, 0.95));
-  color: white;
-  backdrop-filter: blur(10px);
-}
-
-.toast-icon {
-  width: 24px;
-  height: 24px;
-  stroke-width: 2.5;
-  flex-shrink: 0;
-}
-
 /* Transitions */
 .expand-enter-active,
 .expand-leave-active {
@@ -1674,17 +1483,6 @@ onUnmounted(() => {
 .dialog-fade-enter-from .dialog-content,
 .dialog-fade-leave-to .dialog-content {
   transform: scale(0.9);
-}
-
-.toast-fade-enter-active,
-.toast-fade-leave-active {
-  transition: all 0.3s ease;
-}
-
-.toast-fade-enter-from,
-.toast-fade-leave-to {
-  opacity: 0;
-  transform: translateX(100px);
 }
 
 /* Responsive */

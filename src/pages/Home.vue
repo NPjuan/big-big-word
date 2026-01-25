@@ -85,6 +85,14 @@ const handleSwipeRight = () => {
 
   isAnimating.value = true
 
+  // Get the current card being swiped
+  const currentCard = displayWords.value[0]
+
+  // Update mastery for right swipe (user knows the word)
+  if (currentCard) {
+    wordStore.updateMasteryRight(currentCard.id)
+  }
+
   // Wait for card leaving animation to complete (200ms for smoother transition)
   setTimeout(() => {
     const removedCard = displayWords.value.shift()
@@ -127,6 +135,14 @@ const handleSwipeLeft = () => {
   if (isAnimating.value || wordStore.wordCount === 0) return
 
   isAnimating.value = true
+
+  // Get the current card being swiped
+  const currentCard = displayWords.value[0]
+
+  // Update mastery for left swipe (user doesn't know the word well)
+  if (currentCard) {
+    wordStore.updateMasteryLeft(currentCard.id)
+  }
 
   // Wait for card leaving animation to complete (200ms for smoother transition)
   setTimeout(() => {

@@ -1,0 +1,721 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Big Big Word Extension - Test Page</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family:
+          'Baloo 2',
+          -apple-system,
+          BlinkMacSystemFont,
+          'Segoe UI',
+          Roboto,
+          sans-serif;
+        line-height: 1.6;
+        background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 50%, #f0fdfa 100%);
+        min-height: 100vh;
+        padding: 24px;
+        color: #134e4a;
+      }
+
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+      }
+
+      /* ===== Header ===== */
+      .header {
+        text-align: center;
+        margin-bottom: 48px;
+        padding: 48px 32px;
+        background: white;
+        border-radius: 32px;
+        border: 4px solid rgba(13, 148, 136, 0.2);
+        box-shadow:
+          0 8px 24px rgba(13, 148, 136, 0.15),
+          0 16px 48px rgba(13, 148, 136, 0.1),
+          inset 0 2px 0 rgba(255, 255, 255, 0.9);
+        position: relative;
+        overflow: hidden;
+      }
+
+      .header::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 6px;
+        background: linear-gradient(90deg, #0d9488 0%, #2dd4bf 50%, #ea580c 100%);
+      }
+
+      .header h1 {
+        font-size: 56px;
+        font-weight: 800;
+        background: linear-gradient(135deg, #0d9488 0%, #2dd4bf 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 16px;
+        letter-spacing: -0.02em;
+      }
+
+      .header .version {
+        display: inline-block;
+        padding: 8px 20px;
+        background: rgba(234, 88, 12, 0.1);
+        border: 3px solid rgba(234, 88, 12, 0.3);
+        border-radius: 16px;
+        color: #ea580c;
+        font-size: 18px;
+        font-weight: 700;
+        box-shadow: 0 4px 12px rgba(234, 88, 12, 0.15);
+      }
+
+      .header .subtitle {
+        margin-top: 16px;
+        font-size: 20px;
+        color: #0f766e;
+        font-weight: 600;
+      }
+
+      /* ===== Section ===== */
+      .section {
+        background: white;
+        padding: 40px;
+        margin-bottom: 32px;
+        border-radius: 28px;
+        border: 4px solid rgba(13, 148, 136, 0.15);
+        box-shadow:
+          0 6px 20px rgba(13, 148, 136, 0.12),
+          0 12px 40px rgba(13, 148, 136, 0.08),
+          inset 0 2px 0 rgba(255, 255, 255, 0.9);
+        transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+      }
+
+      .section:hover {
+        transform: translateY(-4px);
+        box-shadow:
+          0 8px 28px rgba(13, 148, 136, 0.18),
+          0 16px 56px rgba(13, 148, 136, 0.12),
+          inset 0 2px 0 rgba(255, 255, 255, 0.9);
+        border-color: rgba(13, 148, 136, 0.25);
+      }
+
+      .section h2 {
+        font-size: 32px;
+        font-weight: 800;
+        color: #0d9488;
+        margin-bottom: 24px;
+        padding-bottom: 16px;
+        border-bottom: 4px solid rgba(13, 148, 136, 0.2);
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .section-icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 48px;
+        height: 48px;
+        background: linear-gradient(135deg, #0d9488 0%, #2dd4bf 100%);
+        border-radius: 50%;
+        border: 3px solid rgba(255, 255, 255, 0.5);
+        box-shadow:
+          0 4px 12px rgba(13, 148, 136, 0.3),
+          inset 0 2px 0 rgba(255, 255, 255, 0.3);
+        font-size: 24px;
+      }
+
+      /* ===== Feature List ===== */
+      .feature-list {
+        list-style: none;
+        padding: 0;
+        display: grid;
+        gap: 16px;
+      }
+
+      .feature-list li {
+        padding: 20px 24px;
+        padding-left: 56px;
+        position: relative;
+        background: rgba(13, 148, 136, 0.04);
+        border: 3px solid rgba(13, 148, 136, 0.15);
+        border-radius: 18px;
+        font-size: 17px;
+        font-weight: 600;
+        color: #134e4a;
+        transition: all 0.2s ease-out;
+        box-shadow:
+          0 2px 8px rgba(13, 148, 136, 0.08),
+          inset 0 1px 0 rgba(255, 255, 255, 0.8);
+      }
+
+      .feature-list li:hover {
+        background: rgba(13, 148, 136, 0.08);
+        border-color: rgba(13, 148, 136, 0.25);
+        transform: translateX(4px);
+        box-shadow:
+          0 4px 12px rgba(13, 148, 136, 0.12),
+          inset 0 1px 0 rgba(255, 255, 255, 0.8);
+      }
+
+      .feature-list li::before {
+        content: '';
+        position: absolute;
+        left: 20px;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 20px;
+        height: 20px;
+        background: linear-gradient(135deg, #0d9488 0%, #2dd4bf 100%);
+        border-radius: 50%;
+        border: 2px solid rgba(255, 255, 255, 0.5);
+        box-shadow:
+          0 2px 6px rgba(13, 148, 136, 0.3),
+          inset 0 1px 0 rgba(255, 255, 255, 0.4);
+      }
+
+      .feature-list li strong {
+        color: #0d9488;
+      }
+
+      /* ===== Instructions Box ===== */
+      .instructions {
+        background: linear-gradient(
+          135deg,
+          rgba(234, 88, 12, 0.08) 0%,
+          rgba(249, 115, 22, 0.08) 100%
+        );
+        padding: 20px 24px;
+        border-radius: 18px;
+        margin-bottom: 24px;
+        border: 3px solid rgba(234, 88, 12, 0.25);
+        box-shadow:
+          0 4px 12px rgba(234, 88, 12, 0.12),
+          inset 0 1px 0 rgba(255, 255, 255, 0.6);
+        font-size: 17px;
+        font-weight: 600;
+        color: #7c2d12;
+      }
+
+      .instructions strong {
+        color: #ea580c;
+        font-weight: 800;
+      }
+
+      /* ===== Test Area ===== */
+      .test-area {
+        background: linear-gradient(135deg, #f0fdfa 0%, #ffffff 100%);
+        padding: 28px;
+        border-radius: 20px;
+        border: 3px solid rgba(13, 148, 136, 0.2);
+        box-shadow:
+          0 4px 16px rgba(13, 148, 136, 0.1),
+          inset 0 1px 0 rgba(255, 255, 255, 0.9);
+        font-size: 18px;
+        line-height: 1.8;
+        color: #134e4a;
+      }
+
+      .test-area p {
+        margin-bottom: 16px;
+      }
+
+      .test-area p:last-child {
+        margin-bottom: 0;
+      }
+
+      /* ===== Word Highlighting ===== */
+      .word {
+        color: #0d9488;
+        font-weight: 700;
+        cursor: pointer;
+        padding: 4px 8px;
+        border-radius: 10px;
+        background: rgba(13, 148, 136, 0.1);
+        border: 2px solid rgba(13, 148, 136, 0.2);
+        transition: all 0.2s ease-out;
+        display: inline-block;
+        box-shadow: 0 2px 4px rgba(13, 148, 136, 0.1);
+      }
+
+      .word:hover {
+        background: rgba(13, 148, 136, 0.2);
+        border-color: rgba(13, 148, 136, 0.4);
+        transform: translateY(-2px) scale(1.05);
+        box-shadow: 0 4px 8px rgba(13, 148, 136, 0.2);
+      }
+
+      .word:active {
+        transform: translateY(0) scale(1);
+      }
+
+      /* ===== Buttons ===== */
+      .button-group {
+        display: flex;
+        gap: 16px;
+        flex-wrap: wrap;
+        margin-top: 24px;
+      }
+
+      .link-button {
+        display: inline-flex;
+        align-items: center;
+        gap: 12px;
+        padding: 16px 28px;
+        background: linear-gradient(135deg, #0d9488 0%, #14b8a6 100%);
+        color: white;
+        text-decoration: none;
+        border-radius: 18px;
+        font-weight: 700;
+        font-size: 18px;
+        border: 3px solid rgba(255, 255, 255, 0.3);
+        box-shadow:
+          0 6px 16px rgba(13, 148, 136, 0.3),
+          inset 0 2px 0 rgba(255, 255, 255, 0.3);
+        transition: all 0.2s ease-out;
+        cursor: pointer;
+      }
+
+      .link-button:hover {
+        background: linear-gradient(135deg, #14b8a6 0%, #2dd4bf 100%);
+        transform: translateY(-4px);
+        box-shadow:
+          0 8px 24px rgba(13, 148, 136, 0.4),
+          inset 0 2px 0 rgba(255, 255, 255, 0.4);
+      }
+
+      .link-button:active {
+        transform: translateY(-2px);
+        box-shadow:
+          0 4px 12px rgba(13, 148, 136, 0.3),
+          inset 0 2px 0 rgba(255, 255, 255, 0.3);
+      }
+
+      .link-button-secondary {
+        background: white;
+        color: #0d9488;
+        border: 3px solid #0d9488;
+        box-shadow:
+          0 4px 12px rgba(13, 148, 136, 0.2),
+          inset 0 1px 0 rgba(255, 255, 255, 0.9);
+      }
+
+      .link-button-secondary:hover {
+        background: #f0fdfa;
+        border-color: #14b8a6;
+        color: #14b8a6;
+        box-shadow:
+          0 6px 20px rgba(13, 148, 136, 0.25),
+          inset 0 1px 0 rgba(255, 255, 255, 0.9);
+      }
+
+      /* ===== Icon ===== */
+      .icon {
+        width: 24px;
+        height: 24px;
+        display: inline-block;
+      }
+
+      /* ===== Grid Layout ===== */
+      .grid-2 {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 24px;
+        margin-top: 24px;
+      }
+
+      .card {
+        background: white;
+        padding: 24px;
+        border-radius: 20px;
+        border: 3px solid rgba(13, 148, 136, 0.15);
+        box-shadow:
+          0 4px 12px rgba(13, 148, 136, 0.1),
+          inset 0 1px 0 rgba(255, 255, 255, 0.9);
+        transition: all 0.2s ease-out;
+      }
+
+      .card:hover {
+        border-color: rgba(13, 148, 136, 0.25);
+        transform: translateY(-4px);
+        box-shadow:
+          0 6px 20px rgba(13, 148, 136, 0.15),
+          inset 0 1px 0 rgba(255, 255, 255, 0.9);
+      }
+
+      .card h3 {
+        font-size: 22px;
+        font-weight: 800;
+        color: #0d9488;
+        margin-bottom: 16px;
+        padding-bottom: 12px;
+        border-bottom: 3px solid rgba(13, 148, 136, 0.2);
+      }
+
+      .card p {
+        font-size: 16px;
+        line-height: 1.7;
+        color: #134e4a;
+      }
+
+      /* ===== Footer ===== */
+      .footer {
+        text-align: center;
+        margin-top: 48px;
+        padding: 32px;
+        background: white;
+        border-radius: 28px;
+        border: 4px solid rgba(13, 148, 136, 0.15);
+        box-shadow:
+          0 6px 20px rgba(13, 148, 136, 0.12),
+          inset 0 2px 0 rgba(255, 255, 255, 0.9);
+      }
+
+      .footer p {
+        font-size: 18px;
+        font-weight: 600;
+        color: #0f766e;
+      }
+
+      /* ===== Responsive ===== */
+      @media (max-width: 768px) {
+        body {
+          padding: 16px;
+        }
+
+        .header {
+          padding: 32px 24px;
+          margin-bottom: 32px;
+        }
+
+        .header h1 {
+          font-size: 40px;
+        }
+
+        .header .version {
+          font-size: 16px;
+          padding: 6px 16px;
+        }
+
+        .header .subtitle {
+          font-size: 18px;
+        }
+
+        .section {
+          padding: 28px 24px;
+          margin-bottom: 24px;
+        }
+
+        .section h2 {
+          font-size: 26px;
+        }
+
+        .section-icon {
+          width: 40px;
+          height: 40px;
+          font-size: 20px;
+        }
+
+        .feature-list li {
+          padding: 16px 20px;
+          padding-left: 48px;
+          font-size: 16px;
+        }
+
+        .test-area {
+          padding: 20px;
+          font-size: 16px;
+        }
+
+        .button-group {
+          flex-direction: column;
+        }
+
+        .link-button {
+          width: 100%;
+          justify-content: center;
+        }
+
+        .grid-2 {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      /* ===== Accessibility ===== */
+      @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+          animation-duration: 0.01ms !important;
+          animation-iteration-count: 1 !important;
+          transition-duration: 0.01ms !important;
+        }
+      }
+
+      .link-button:focus-visible,
+      .word:focus-visible {
+        outline: 3px solid #0d9488;
+        outline-offset: 3px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <!-- Header -->
+      <div class="header">
+        <h1>📚 Big Big Word</h1>
+        <div class="version">v2.0.0 Claymorphism</div>
+        <p class="subtitle">Chrome 扩展测试页面 - 全新 3D 设计 + 中文翻译</p>
+      </div>
+
+      <!-- Design Highlights -->
+      <div class="section">
+        <h2>
+          <span class="section-icon">🎨</span>
+          全新设计亮点
+        </h2>
+        <ul class="feature-list">
+          <li><strong>Claymorphism 风格：</strong>柔和 3D 效果、圆润可爱、playful 交互体验</li>
+          <li><strong>中文翻译：</strong>自动翻译英文释义为中文，降低学习门槛</li>
+          <li><strong>配色统一：</strong>青色主题与主应用保持一致的视觉语言</li>
+          <li><strong>多层阴影：</strong>内外双重阴影营造立体感，视觉更丰富</li>
+          <li><strong>厚实边框：</strong>3-4px 边框设计，toy-like 质感</li>
+          <li><strong>弹性动画：</strong>cubic-bezier 缓动函数，交互更愉悦</li>
+        </ul>
+      </div>
+
+      <!-- Test 1: Selection Translation -->
+      <div class="section">
+        <h2>
+          <span class="section-icon">🎯</span>
+          测试 1：选中翻译
+        </h2>
+        <div class="instructions">
+          <strong>操作说明：</strong>选中下方任意单词，等待 300ms
+          后自动弹出翻译窗口，查看音标、中文释义和发音功能。
+        </div>
+        <div class="test-area">
+          <p>
+            The <span class="word">serendipity</span> of discovering this
+            <span class="word">magnificent</span> <span class="word">phenomenon</span> was truly
+            <span class="word">extraordinary</span>. The <span class="word">ephemeral</span> nature
+            of such moments makes them even more <span class="word">precious</span> and
+            <span class="word">memorable</span>.
+          </p>
+        </div>
+      </div>
+
+      <!-- Test 2: Double-Click Translation -->
+      <div class="section">
+        <h2>
+          <span class="section-icon">🖱️</span>
+          测试 2：双击翻译
+        </h2>
+        <div class="instructions">
+          <strong>操作说明：</strong>双击下方任意单词，立即显示翻译弹窗，无需手动选中。
+        </div>
+        <div class="test-area">
+          <p>
+            The quintessential characteristic of perseverance is the ability to maintain enthusiasm
+            despite encountering numerous obstacles. Resilience and determination are fundamental
+            attributes that distinguish successful individuals from those who surrender prematurely.
+          </p>
+        </div>
+      </div>
+
+      <!-- Test 3: Audio Playback -->
+      <div class="section">
+        <h2>
+          <span class="section-icon">🔊</span>
+          测试 3：音频播放
+        </h2>
+        <div class="instructions">
+          <strong>操作说明：</strong>选中单词后，点击弹窗中的播放按钮 🔊
+          听取标准发音，播放时按钮会有脉冲动画。
+        </div>
+        <div class="test-area">
+          <p>
+            <strong>常用单词：</strong>
+            <span class="word">hello</span>, <span class="word">world</span>,
+            <span class="word">beautiful</span>, <span class="word">wonderful</span>,
+            <span class="word">amazing</span>, <span class="word">fantastic</span>,
+            <span class="word">incredible</span>, <span class="word">awesome</span>
+          </p>
+        </div>
+      </div>
+
+      <!-- Test 4: Save to Vocabulary -->
+      <div class="section">
+        <h2>
+          <span class="section-icon">💾</span>
+          测试 4：保存单词
+        </h2>
+        <div class="instructions">
+          <strong>操作说明：</strong>选中单词后，点击"📚 添加到单词本"按钮，单词将保存到本地存储。
+        </div>
+        <div class="test-area">
+          <p>
+            <strong>推荐保存：</strong>
+            <span class="word">vocabulary</span>, <span class="word">dictionary</span>,
+            <span class="word">language</span>, <span class="word">learning</span>,
+            <span class="word">education</span>, <span class="word">knowledge</span>,
+            <span class="word">wisdom</span>, <span class="word">comprehension</span>
+          </p>
+        </div>
+      </div>
+
+      <!-- Test 5: Quick Navigation -->
+      <div class="section">
+        <h2>
+          <span class="section-icon">🎴</span>
+          测试 5：快速跳转
+        </h2>
+        <div class="instructions">
+          <strong>操作说明：</strong>点击翻译弹窗中的"🎴
+          打开学习"按钮，或直接点击下方按钮跳转到学习网站。
+        </div>
+        <div class="button-group">
+          <a
+            href="https://big-big-word-pevn.vercel.app/"
+            target="_blank"
+            class="link-button"
+            tabindex="0"
+          >
+            <svg
+              class="icon"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
+              ></path>
+            </svg>
+            打开学习网站
+          </a>
+          <a href="chrome://extensions/" class="link-button link-button-secondary" tabindex="0">
+            <svg
+              class="icon"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
+              ></path>
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+              ></path>
+            </svg>
+            管理扩展
+          </a>
+        </div>
+      </div>
+
+      <!-- Sample Vocabulary -->
+      <div class="section">
+        <h2>
+          <span class="section-icon">📖</span>
+          词汇示例
+        </h2>
+        <div class="grid-2">
+          <div class="card">
+            <h3>🎓 高级词汇</h3>
+            <p>
+              aberration, benevolent, cacophony, deleterious, ebullient, facetious, gregarious,
+              hapless, iconoclast, juxtapose, kaleidoscope, loquacious, mellifluous, nefarious,
+              obfuscate, pernicious, quixotic, recalcitrant, surreptitious, ubiquitous, vociferous,
+              whimsical, xenophobia, zealous
+            </p>
+          </div>
+          <div class="card">
+            <h3>⭐ 常用词汇</h3>
+            <p>
+              achieve, believe, create, develop, explore, flourish, generate, harmonize, innovate,
+              journey, knowledge, leverage, motivate, navigate, optimize, persevere, question,
+              realize, succeed, transform, understand, visualize, welcome, yield
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- New Features -->
+      <div class="section">
+        <h2>
+          <span class="section-icon">✨</span>
+          v2.0.0 新特性
+        </h2>
+        <ul class="feature-list">
+          <li><strong>Claymorphism 设计：</strong>柔和 3D 效果，chunky 风格，playful 交互</li>
+          <li><strong>中文翻译：</strong>自动翻译英文释义为中文，使用 LibreTranslate API</li>
+          <li><strong>视觉增强：</strong>多层阴影和 3-4px 厚实边框</li>
+          <li><strong>平滑动画：</strong>弹性过渡效果，cubic-bezier 缓动函数</li>
+          <li><strong>按钮优化：</strong>playful hover 效果，3D 按压动画</li>
+          <li><strong>字体升级：</strong>Baloo 2 字体，友好教育风格</li>
+        </ul>
+      </div>
+
+      <!-- Footer -->
+      <div class="footer">
+        <p>🎉 享受学习新单词的乐趣！Big Big Word v2.0.0</p>
+      </div>
+    </div>
+
+    <script>
+      // Add interactive feedback
+      document.querySelectorAll('.word').forEach((word) => {
+        word.addEventListener('click', function () {
+          this.style.transform = 'translateY(-2px) scale(1.05)'
+          setTimeout(() => {
+            this.style.transform = ''
+          }, 200)
+        })
+      })
+
+      // Console log
+      console.log(
+        '%c🎨 Big Big Word Extension v2.0.0',
+        'color: #0D9488; font-size: 20px; font-weight: bold;',
+      )
+      console.log(
+        '%c✨ Claymorphism Design + Chinese Translation',
+        'color: #2DD4BF; font-size: 14px;',
+      )
+      console.log('%c📚 Features:', 'color: #EA580C; font-size: 16px; font-weight: bold;')
+      console.log('  ✓ Selection translation')
+      console.log('  ✓ Double-click translation')
+      console.log('  ✓ Audio playback')
+      console.log('  ✓ Save to vocabulary')
+      console.log('  ✓ Quick navigation')
+    </script>
+  </body>
+</html>

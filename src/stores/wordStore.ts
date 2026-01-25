@@ -126,6 +126,30 @@ export const useWordStore = defineStore('word', () => {
     }
   }
 
+  // Update mastery when swiping right (mastered)
+  const updateMasteryRight = (id: string) => {
+    const word = words.value.find((w) => w.id === id)
+    if (word) {
+      word.reviewCount++
+      word.lastReviewed = new Date().toISOString()
+      // Increase mastery by 10% when user confirms they know the word
+      word.mastery = Math.min(100, word.mastery + 10)
+      saveWords()
+    }
+  }
+
+  // Update mastery when swiping left (not mastered yet)
+  const updateMasteryLeft = (id: string) => {
+    const word = words.value.find((w) => w.id === id)
+    if (word) {
+      word.reviewCount++
+      word.lastReviewed = new Date().toISOString()
+      // Decrease mastery by 5% when user indicates they don't know the word well
+      word.mastery = Math.max(0, word.mastery - 5)
+      saveWords()
+    }
+  }
+
   // Initialize
   loadWords()
 
@@ -140,6 +164,8 @@ export const useWordStore = defineStore('word', () => {
     deleteWord,
     updateWord,
     incrementReview,
+    updateMasteryRight,
+    updateMasteryLeft,
     loadWords,
     saveWords,
   }

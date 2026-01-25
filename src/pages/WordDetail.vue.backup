@@ -1,0 +1,1573 @@
+<template>
+  <div class="word-detail-page">
+    <!-- Loading State -->
+    <div v-if="loading" class="loading-container">
+      <div class="loading-spinner"></div>
+      <p class="loading-text">Loading...</p>
+    </div>
+
+    <!-- Error State -->
+    <div v-else-if="error" class="error-container">
+      <div class="error-icon">⚠️</div>
+      <h2 class="error-title">{{ error }}</h2>
+      <button class="back-btn" @click="goBack">← Go Back</button>
+    </div>
+
+    <!-- Word Detail Content -->
+    <div v-else-if="word" class="detail-container">
+      <!-- Header -->
+      <div class="detail-header">
+        <button class="back-btn" @click="goBack" aria-label="Go back">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <path
+              d="M10 19l-7-7m0 0l7-7m-7 7h18"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+          </svg>
+          <span>Back</span>
+        </button>
+      </div>
+
+      <!-- Word Title Section -->
+      <div class="word-title-section">
+        <!-- Main Title Row -->
+        <div class="title-row">
+          <div class="title-left">
+            <h1 class="word-title">{{ word.word }}</h1>
+
+            <!-- Enhanced Phonetics Section -->
+            <div v-if="hasPhonetics()" class="phonetics-container">
+              <!-- Primary Phonetic (from word object) -->
+              <div v-if="word.phonetic" class="phonetic-item primary-phonetic">
+                <div class="phonetic-label">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <path
+                      d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
+                  </svg>
+                  <span>Phonetic</span>
+                </div>
+                <div class="phonetic-content">
+                  <span class="phonetic-text">{{ word.phonetic }}</span>
+                  <button
+                    class="audio-btn"
+                    @click="handlePlayAudio(word.audioUrl)"
+                    @keydown.enter="handlePlayAudio(word.audioUrl)"
+                    @keydown.space.prevent="handlePlayAudio(word.audioUrl)"
+                    :aria-label="`Play pronunciation: ${word.phonetic}`"
+                    tabindex="0"
+                  >
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                      <path
+                        d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                      />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Additional Phonetics from API -->
+              <div
+                v-if="wordData?.phonetics && wordData.phonetics.length > 0"
+                class="additional-phonetics"
+              >
+                <div
+                  v-for="(phonetic, idx) in wordData.phonetics.slice(0, 2)"
+                  :key="idx"
+                  class="phonetic-item"
+                >
+                  <div class="phonetic-label">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                      <path
+                        d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                      />
+                    </svg>
+                    <span>{{ handleGetPhoneticLabel(phonetic, idx) }}</span>
+                  </div>
+                  <div class="phonetic-content">
+                    <span class="phonetic-text">{{ phonetic.text }}</span>
+                    <button
+                      v-if="phonetic.audio"
+                      class="audio-btn"
+                      @click="handlePlayAudio(phonetic.audio)"
+                      @keydown.enter="handlePlayAudio(phonetic.audio)"
+                      @keydown.space.prevent="handlePlayAudio(phonetic.audio)"
+                      :aria-label="`Play ${handleGetPhoneticLabel(phonetic, idx)} pronunciation`"
+                      tabindex="0"
+                    >
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <path
+                          d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"
+                          stroke-width="2"
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                        />
+                      </svg>
+                    </button>
+                    <button
+                      v-else
+                      class="audio-btn speech-btn"
+                      @click="handlePlayTextToSpeech(word.word)"
+                      @keydown.enter="handlePlayTextToSpeech(word.word)"
+                      @keydown.space.prevent="handlePlayTextToSpeech(word.word)"
+                      :aria-label="`Speak word using text-to-speech`"
+                      tabindex="0"
+                      title="Text-to-Speech"
+                    >
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <path
+                          d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"
+                          stroke-width="2"
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                        />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <!-- Part of Speech Tags -->
+            <div v-if="word.partOfSpeech.length > 0" class="pos-tags">
+              <span v-for="pos in word.partOfSpeech" :key="pos" class="pos-tag">
+                {{ pos }}
+              </span>
+            </div>
+          </div>
+
+          <!-- Mastery Info -->
+          <div class="mastery-info">
+            <div class="mastery-badge" :class="`mastery-${getMasteryLevel(word.mastery)}`">
+              <div class="mastery-value">{{ word.mastery }}%</div>
+              <div class="mastery-label">Mastery</div>
+            </div>
+            <div class="review-count">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path
+                  d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </svg>
+              <span>{{ word.reviewCount }} reviews</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Related Words Section -->
+        <div v-if="hasRelatedWords()" class="header-related-words">
+          <!-- Synonyms -->
+          <div v-if="getFirstSynonyms().length > 0" class="related-group">
+            <div class="related-label">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path
+                  d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </svg>
+              <span>Synonyms:</span>
+            </div>
+            <div class="related-tags-inline">
+              <span v-for="(syn, idx) in getFirstSynonyms()" :key="idx" class="related-tag-inline">
+                {{ syn }}
+              </span>
+            </div>
+          </div>
+
+          <!-- Antonyms -->
+          <div v-if="getFirstAntonyms().length > 0" class="related-group">
+            <div class="related-label">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path
+                  d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </svg>
+              <span>Antonyms:</span>
+            </div>
+            <div class="related-tags-inline">
+              <span
+                v-for="(ant, idx) in getFirstAntonyms()"
+                :key="idx"
+                class="related-tag-inline antonym-tag-inline"
+              >
+                {{ ant }}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Word Forms Section -->
+      <div
+        v-if="wordData?.wordForms && hasWordForms(wordData.wordForms)"
+        class="section word-forms-section"
+      >
+        <div class="section-header">
+          <svg class="section-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <path
+              d="M4 5a1 1 0 011-1h4a1 1 0 011 1v7a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM14 5a1 1 0 011-1h4a1 1 0 011 1v7a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zM4 16a1 1 0 011-1h4a1 1 0 011 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-3zM14 16a1 1 0 011-1h4a1 1 0 011 1v3a1 1 0 01-1 1h-4a1 1 0 01-1-1v-3z"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+          </svg>
+          <h2 class="section-title">Word Forms & Inflections</h2>
+        </div>
+
+        <div class="word-forms-grid">
+          <!-- Verb Forms -->
+          <div v-if="hasVerbForms(wordData.wordForms)" class="forms-category">
+            <div class="category-header">
+              <svg class="category-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path
+                  d="M13 10V3L4 14h7v7l9-11h-7z"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </svg>
+              <h3 class="category-title">Verb Forms</h3>
+            </div>
+            <div class="forms-list">
+              <div v-if="wordData.wordForms.pastTense" class="form-item">
+                <span class="form-label">Past Tense</span>
+                <span class="form-value">{{ wordData.wordForms.pastTense }}</span>
+              </div>
+              <div v-if="wordData.wordForms.pastParticiple" class="form-item">
+                <span class="form-label">Past Participle</span>
+                <span class="form-value">{{ wordData.wordForms.pastParticiple }}</span>
+              </div>
+              <div v-if="wordData.wordForms.presentParticiple" class="form-item">
+                <span class="form-label">Present Participle</span>
+                <span class="form-value">{{ wordData.wordForms.presentParticiple }}</span>
+              </div>
+              <div v-if="wordData.wordForms.thirdPersonSingular" class="form-item">
+                <span class="form-label">3rd Person Singular</span>
+                <span class="form-value">{{ wordData.wordForms.thirdPersonSingular }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Noun Forms -->
+          <div v-if="hasNounForms(wordData.wordForms)" class="forms-category">
+            <div class="category-header">
+              <svg class="category-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path
+                  d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </svg>
+              <h3 class="category-title">Noun Forms</h3>
+            </div>
+            <div class="forms-list">
+              <div v-if="wordData.wordForms.plural" class="form-item">
+                <span class="form-label">Plural</span>
+                <span class="form-value">{{ wordData.wordForms.plural }}</span>
+              </div>
+              <div v-if="wordData.wordForms.singular" class="form-item">
+                <span class="form-label">Singular</span>
+                <span class="form-value">{{ wordData.wordForms.singular }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Adjective Forms -->
+          <div v-if="hasAdjectiveForms(wordData.wordForms)" class="forms-category">
+            <div class="category-header">
+              <svg class="category-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path
+                  d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </svg>
+              <h3 class="category-title">Adjective Forms</h3>
+            </div>
+            <div class="forms-list">
+              <div v-if="wordData.wordForms.comparative" class="form-item">
+                <span class="form-label">Comparative</span>
+                <span class="form-value">{{ wordData.wordForms.comparative }}</span>
+              </div>
+              <div v-if="wordData.wordForms.superlative" class="form-item">
+                <span class="form-label">Superlative</span>
+                <span class="form-value">{{ wordData.wordForms.superlative }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Related Forms -->
+          <div v-if="hasRelatedForms(wordData.wordForms)" class="forms-category">
+            <div class="category-header">
+              <svg class="category-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path
+                  d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </svg>
+              <h3 class="category-title">Related Forms</h3>
+            </div>
+            <div class="forms-list">
+              <div v-if="wordData.wordForms.noun" class="form-item">
+                <span class="form-label">Noun</span>
+                <span class="form-value">{{ wordData.wordForms.noun }}</span>
+              </div>
+              <div v-if="wordData.wordForms.verb" class="form-item">
+                <span class="form-label">Verb</span>
+                <span class="form-value">{{ wordData.wordForms.verb }}</span>
+              </div>
+              <div v-if="wordData.wordForms.adjective" class="form-item">
+                <span class="form-label">Adjective</span>
+                <span class="form-value">{{ wordData.wordForms.adjective }}</span>
+              </div>
+              <div v-if="wordData.wordForms.adverb" class="form-item">
+                <span class="form-label">Adverb</span>
+                <span class="form-value">{{ wordData.wordForms.adverb }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Origin Section -->
+      <div v-if="wordData?.origin" class="section origin-section">
+        <div class="section-header">
+          <svg class="section-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <path
+              d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+          </svg>
+          <h2 class="section-title">Origin</h2>
+        </div>
+        <div class="origin-content">
+          <p class="origin-text">{{ wordData.origin }}</p>
+        </div>
+      </div>
+
+      <!-- Meanings Section -->
+      <div class="section meanings-section">
+        <div class="section-header">
+          <svg class="section-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <path
+              d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+          </svg>
+          <h2 class="section-title">Meanings & Definitions</h2>
+        </div>
+
+        <!-- English Meanings -->
+        <div v-if="wordData?.englishMeanings" class="meanings-group">
+          <div class="language-header">
+            <span class="language-label language-label-en">EN</span>
+            <h3 class="language-title">English</h3>
+          </div>
+
+          <div
+            v-for="(meaning, idx) in wordData.englishMeanings"
+            :key="'en-' + idx"
+            class="meaning-card"
+          >
+            <div class="meaning-pos">{{ meaning.partOfSpeech }}</div>
+
+            <!-- Definitions -->
+            <div v-if="meaning.definitions.length > 0" class="definitions-list">
+              <div
+                v-for="(def, defIdx) in meaning.definitions"
+                :key="defIdx"
+                class="definition-item"
+              >
+                <span class="definition-number">{{ defIdx + 1 }}</span>
+                <span class="definition-text">{{ def }}</span>
+              </div>
+            </div>
+
+            <!-- Examples (limited to 3) -->
+            <div v-if="meaning.examples && meaning.examples.length > 0" class="examples-list">
+              <div class="examples-header">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                  <path
+                    d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                </svg>
+                <span>Examples</span>
+              </div>
+              <div
+                v-for="(example, exIdx) in meaning.examples.slice(0, 3)"
+                :key="exIdx"
+                class="example-item"
+              >
+                "{{ example }}"
+              </div>
+            </div>
+
+            <!-- Synonyms -->
+            <div v-if="meaning.synonyms && meaning.synonyms.length > 0" class="related-words">
+              <div class="related-header">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                  <path
+                    d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                </svg>
+                <span>Synonyms</span>
+              </div>
+              <div class="related-tags">
+                <span
+                  v-for="(syn, synIdx) in meaning.synonyms.slice(0, 8)"
+                  :key="synIdx"
+                  class="related-tag"
+                >
+                  {{ syn }}
+                </span>
+                <span v-if="meaning.synonyms.length > 8" class="related-more">
+                  +{{ meaning.synonyms.length - 8 }} more
+                </span>
+              </div>
+            </div>
+
+            <!-- Antonyms -->
+            <div v-if="meaning.antonyms && meaning.antonyms.length > 0" class="related-words">
+              <div class="related-header">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                  <path
+                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                </svg>
+                <span>Antonyms</span>
+              </div>
+              <div class="related-tags">
+                <span
+                  v-for="(ant, antIdx) in meaning.antonyms.slice(0, 8)"
+                  :key="antIdx"
+                  class="related-tag antonym-tag"
+                >
+                  {{ ant }}
+                </span>
+                <span v-if="meaning.antonyms.length > 8" class="related-more">
+                  +{{ meaning.antonyms.length - 8 }} more
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script setup lang="ts">
+import { ref, onMounted, computed } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import { useWordStore } from '@/stores/wordStore'
+import { fetchWordData, type WordData } from '@/services/dictionaryApi'
+import type { Word, WordForms } from '@/types/word.types'
+import { playAudio, playTextToSpeech, getPhoneticLabel } from '@/utils/audioUtils'
+
+const route = useRoute()
+const router = useRouter()
+const wordStore = useWordStore()
+
+const loading = ref(true)
+const error = ref<string | null>(null)
+const word = ref<Word | null>(null)
+const wordData = ref<WordData | null>(null)
+
+const getMasteryLevel = (mastery: number): string => {
+  if (mastery >= 80) return 'high'
+  if (mastery >= 50) return 'medium'
+  return 'low'
+}
+
+const hasWordForms = (forms: WordForms | undefined): boolean => {
+  if (!forms) return false
+  return Object.values(forms).some((value) => value !== undefined && value !== null && value !== '')
+}
+
+const hasVerbForms = (forms: WordForms | undefined): boolean => {
+  if (!forms) return false
+  return !!(
+    forms.pastTense ||
+    forms.pastParticiple ||
+    forms.presentParticiple ||
+    forms.thirdPersonSingular
+  )
+}
+
+const hasNounForms = (forms: WordForms | undefined): boolean => {
+  if (!forms) return false
+  return !!(forms.plural || forms.singular)
+}
+
+const hasAdjectiveForms = (forms: WordForms | undefined): boolean => {
+  if (!forms) return false
+  return !!(forms.comparative || forms.superlative)
+}
+
+const hasRelatedForms = (forms: WordForms | undefined): boolean => {
+  if (!forms) return false
+  return !!(forms.noun || forms.verb || forms.adjective || forms.adverb)
+}
+
+const hasRelatedWords = (): boolean => {
+  if (!wordData.value?.englishMeanings) return false
+  return wordData.value.englishMeanings.some(
+    (m) => (m.synonyms && m.synonyms.length > 0) || (m.antonyms && m.antonyms.length > 0),
+  )
+}
+
+const getFirstSynonyms = (): string[] => {
+  if (!wordData.value?.englishMeanings) return []
+  for (const meaning of wordData.value.englishMeanings) {
+    if (meaning.synonyms && meaning.synonyms.length > 0) {
+      return meaning.synonyms.slice(0, 6)
+    }
+  }
+  return []
+}
+
+const getFirstAntonyms = (): string[] => {
+  if (!wordData.value?.englishMeanings) return []
+  for (const meaning of wordData.value.englishMeanings) {
+    if (meaning.antonyms && meaning.antonyms.length > 0) {
+      return meaning.antonyms.slice(0, 6)
+    }
+  }
+  return []
+}
+
+const hasPhonetics = (): boolean => {
+  return !!(
+    word.value?.phonetic ||
+    (wordData.value?.phonetics && wordData.value.phonetics.length > 0)
+  )
+}
+
+// Wrapper functions to use imported utilities with component context
+const handlePlayAudio = (audioUrl?: string) => {
+  const url = audioUrl || word.value?.audioUrl
+  const fallbackText = word.value?.word || ''
+  playAudio(url, fallbackText)
+}
+
+const handlePlayTextToSpeech = (text: string) => {
+  playTextToSpeech(text)
+}
+
+const handleGetPhoneticLabel = (
+  phonetic: { audio?: string; text?: string },
+  index: number,
+): string => {
+  return getPhoneticLabel(phonetic, index)
+}
+
+const goBack = () => {
+  router.push('/')
+}
+
+const loadWordDetail = async () => {
+  try {
+    loading.value = true
+    error.value = null
+
+    const wordId = route.params.id as string
+    if (!wordId) {
+      error.value = 'Word ID is required'
+      return
+    }
+
+    // Find word in store
+    const foundWord = wordStore.words.find((w) => w.id === wordId)
+    if (!foundWord) {
+      error.value = 'Word not found'
+      return
+    }
+
+    word.value = foundWord
+
+    // Fetch additional word data from API
+    try {
+      const data = await fetchWordData(foundWord.word)
+      if (data) {
+        wordData.value = data
+      }
+    } catch (apiError) {
+      console.warn('Failed to fetch additional word data:', apiError)
+      // Continue with existing word data
+    }
+  } catch (err) {
+    console.error('Error loading word detail:', err)
+    error.value = 'Failed to load word details'
+  } finally {
+    loading.value = false
+  }
+}
+
+onMounted(() => {
+  loadWordDetail()
+})
+</script>
+
+<style scoped>
+/* Page Container */
+.word-detail-page {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 30%, #fff7ed 70%, #ffedd5 100%);
+  padding: 1.25rem;
+}
+
+/* Loading State */
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+  gap: 1.5rem;
+}
+
+.loading-spinner {
+  width: 64px;
+  height: 64px;
+  border: 4px solid rgba(13, 148, 136, 0.2);
+  border-top-color: #0d9488;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.loading-text {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #0d9488;
+  margin: 0;
+}
+
+/* Error State */
+.error-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+  gap: 2rem;
+}
+
+.error-icon {
+  width: 96px;
+  height: 96px;
+  color: #ea580c;
+}
+
+.error-icon svg {
+  width: 100%;
+  height: 100%;
+  stroke-width: 1.5;
+}
+
+.error-title {
+  font-size: 1.875rem;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0;
+  text-align: center;
+}
+
+/* Detail Container */
+.detail-container {
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+/* Header */
+.detail-header {
+  margin-bottom: 1rem;
+}
+
+.back-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: white;
+  background: linear-gradient(135deg, #0d9488, #2dd4bf);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(13, 148, 136, 0.3);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(13, 148, 136, 0.3);
+}
+
+.back-btn:hover {
+  transform: translateX(-4px);
+  box-shadow: 0 4px 12px rgba(13, 148, 136, 0.4);
+}
+
+.back-btn svg {
+  width: 16px;
+  height: 16px;
+  stroke-width: 2.5;
+}
+
+/* Word Title Section */
+.word-title-section {
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(20px);
+  border-radius: 16px;
+  padding: 1.25rem;
+  margin-bottom: 1rem;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(13, 148, 136, 0.15);
+}
+
+.title-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1.5rem;
+  margin-bottom: 1.25rem;
+  padding-bottom: 1.25rem;
+  border-bottom: 2px solid rgba(0, 0, 0, 0.05);
+}
+
+.title-left {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.word-main {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.word-title {
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: #0d9488;
+  margin: 0;
+  text-transform: capitalize;
+  letter-spacing: -0.02em;
+  line-height: 1;
+}
+
+/* Enhanced Phonetics Container - Claymorphism Style */
+.phonetics-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1rem;
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.08), rgba(96, 165, 250, 0.08));
+  border: 3px solid rgba(59, 130, 246, 0.2);
+  border-radius: 20px;
+  box-shadow:
+    0 4px 12px rgba(59, 130, 246, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+
+.primary-phonetic {
+  padding-bottom: 0.75rem;
+  border-bottom: 2px solid rgba(59, 130, 246, 0.15);
+}
+
+.additional-phonetics {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+}
+
+.phonetic-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.phonetic-label {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  color: #3b82f6;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.phonetic-label svg {
+  width: 14px;
+  height: 14px;
+  stroke-width: 2.5;
+  color: #3b82f6;
+}
+
+.phonetic-content {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 0.625rem 0.875rem;
+  background: white;
+  border: 2px solid rgba(59, 130, 246, 0.2);
+  border-radius: 14px;
+  box-shadow:
+    0 2px 8px rgba(59, 130, 246, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  transition: all 0.2s ease;
+}
+
+.phonetic-content:hover {
+  transform: translateY(-1px);
+  box-shadow:
+    0 4px 12px rgba(59, 130, 246, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+.phonetic-text {
+  flex: 1;
+  font-family: 'SF Mono', 'Monaco', 'Courier New', monospace;
+  font-size: 1rem;
+  color: #1e293b;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.audio-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 3px solid rgba(249, 115, 22, 0.3);
+  background: linear-gradient(135deg, #f97316, #fb923c);
+  color: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease-out;
+  box-shadow:
+    0 4px 12px rgba(249, 115, 22, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  flex-shrink: 0;
+}
+
+.audio-btn:hover {
+  transform: scale(1.08) translateY(-2px);
+  box-shadow:
+    0 6px 16px rgba(249, 115, 22, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  border-color: rgba(249, 115, 22, 0.5);
+}
+
+.audio-btn:active {
+  transform: scale(0.95) translateY(0);
+  box-shadow:
+    0 2px 6px rgba(249, 115, 22, 0.3),
+    inset 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.audio-btn:focus-visible {
+  outline: 3px solid rgba(249, 115, 22, 0.5);
+  outline-offset: 2px;
+}
+
+.audio-btn svg {
+  width: 18px;
+  height: 18px;
+  stroke-width: 2.5;
+}
+
+/* Speech Button Variant (for text-to-speech fallback) */
+.speech-btn {
+  background: linear-gradient(135deg, #8b5cf6, #a78bfa);
+  border-color: rgba(139, 92, 246, 0.3);
+  box-shadow:
+    0 4px 12px rgba(139, 92, 246, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.speech-btn:hover {
+  box-shadow:
+    0 6px 16px rgba(139, 92, 246, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  border-color: rgba(139, 92, 246, 0.5);
+}
+
+.speech-btn:active {
+  box-shadow:
+    0 2px 6px rgba(139, 92, 246, 0.3),
+    inset 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Part of Speech Tags */
+.pos-tags {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.pos-tag {
+  padding: 0.3rem 0.7rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: lowercase;
+  color: #0d9488;
+  background: rgba(13, 148, 136, 0.1);
+  border-radius: 8px;
+  border: 1px solid rgba(13, 148, 136, 0.2);
+}
+
+/* Mastery Info */
+.mastery-info {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.625rem;
+}
+
+.mastery-badge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  border-radius: 12px;
+  min-width: 90px;
+}
+
+.mastery-value {
+  font-size: 1.5rem;
+  font-weight: 800;
+  line-height: 1;
+  margin-bottom: 0.25rem;
+}
+
+.mastery-label {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  opacity: 0.8;
+}
+
+.mastery-high {
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.15), rgba(34, 197, 94, 0.05));
+  color: #16a34a;
+  border: 1px solid rgba(34, 197, 94, 0.3);
+}
+
+.mastery-medium {
+  background: linear-gradient(135deg, rgba(251, 146, 60, 0.15), rgba(251, 146, 60, 0.05));
+  color: #ea580c;
+  border: 1px solid rgba(251, 146, 60, 0.3);
+}
+
+.mastery-low {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.15), rgba(239, 68, 68, 0.05));
+  color: #dc2626;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.review-count {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: #475569;
+  padding: 0.3rem 0.625rem;
+  background: rgba(0, 0, 0, 0.03);
+  border-radius: 8px;
+}
+
+.review-count svg {
+  width: 14px;
+  height: 14px;
+  stroke-width: 2;
+}
+
+/* Header Related Words */
+.header-related-words {
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+}
+
+.related-group {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.related-label {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: rgba(0, 0, 0, 0.6);
+  flex-shrink: 0;
+}
+
+.related-label svg {
+  width: 14px;
+  height: 14px;
+  stroke-width: 2;
+  color: #0d9488;
+}
+
+.related-tags-inline {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  flex: 1;
+}
+
+.related-tag-inline {
+  padding: 0.3rem 0.625rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: #0d9488;
+  background: rgba(13, 148, 136, 0.08);
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  border: 1px solid rgba(13, 148, 136, 0.15);
+}
+
+.related-tag-inline:hover {
+  background: rgba(13, 148, 136, 0.15);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(13, 148, 136, 0.2);
+}
+
+.antonym-tag-inline {
+  color: #dc2626;
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.15);
+}
+
+.antonym-tag-inline:hover {
+  background: rgba(239, 68, 68, 0.15);
+  box-shadow: 0 2px 6px rgba(239, 68, 68, 0.2);
+}
+
+/* Section */
+.section {
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(20px);
+  border-radius: 16px;
+  padding: 1.25rem;
+  margin-bottom: 1rem;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+  border: 1px solid rgba(13, 148, 136, 0.15);
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  padding-bottom: 0.625rem;
+  border-bottom: 2px solid rgba(13, 148, 136, 0.1);
+}
+
+.section-icon {
+  width: 18px;
+  height: 18px;
+  color: #0d9488;
+  stroke-width: 2;
+}
+
+.section-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0;
+}
+
+/* Origin Section */
+.origin-content {
+  padding: 0.875rem;
+  background: rgba(13, 148, 136, 0.05);
+  border-radius: 12px;
+  border-left: 3px solid #0d9488;
+}
+
+.origin-text {
+  font-size: 0.875rem;
+  color: #475569;
+  line-height: 1.6;
+  margin: 0;
+  font-style: italic;
+}
+
+/* Word Forms Section */
+.word-forms-section {
+  background: linear-gradient(135deg, rgba(13, 148, 136, 0.03), rgba(45, 212, 191, 0.03));
+  border: 1px solid rgba(13, 148, 136, 0.15);
+}
+
+.word-forms-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 0.875rem;
+}
+
+.forms-category {
+  background: white;
+  border-radius: 12px;
+  padding: 0.875rem;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  transition: all 0.2s ease;
+}
+
+.forms-category:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(13, 148, 136, 0.12);
+  cursor: default;
+}
+
+.category-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid rgba(13, 148, 136, 0.1);
+}
+
+.category-icon {
+  width: 16px;
+  height: 16px;
+  color: #0d9488;
+  stroke-width: 2;
+  flex-shrink: 0;
+}
+
+.category-title {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: #0d9488;
+  margin: 0;
+}
+
+.forms-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+}
+
+.form-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 0.625rem;
+  background: linear-gradient(135deg, rgba(13, 148, 136, 0.05), rgba(45, 212, 191, 0.05));
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.form-item:hover {
+  background: linear-gradient(135deg, rgba(13, 148, 136, 0.1), rgba(45, 212, 191, 0.1));
+  transform: translateX(2px);
+}
+
+.form-label {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: #475569;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.form-value {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: #0d9488;
+  text-transform: lowercase;
+  font-family: 'SF Mono', 'Monaco', 'Courier New', monospace;
+}
+
+/* Meanings Section */
+.meanings-group {
+  margin-bottom: 1.5rem;
+}
+
+.meanings-group:last-child {
+  margin-bottom: 0;
+}
+
+.language-header {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  margin-bottom: 1rem;
+}
+
+.language-label {
+  font-size: 0.625rem;
+  font-weight: 800;
+  padding: 0.25rem 0.5rem;
+  border-radius: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.language-label-en {
+  background: linear-gradient(135deg, #ea580c, #fb923c);
+  color: white;
+}
+
+.language-flag {
+  font-size: 1.25rem;
+}
+
+.language-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0;
+}
+
+/* Meaning Card */
+.meaning-card {
+  padding: 1rem;
+  background: linear-gradient(135deg, rgba(13, 148, 136, 0.03), rgba(45, 212, 191, 0.03));
+  border: 1px solid rgba(13, 148, 136, 0.1);
+  border-radius: 12px;
+  margin-bottom: 0.875rem;
+}
+
+.meaning-card:last-child {
+  margin-bottom: 0;
+}
+
+.meaning-pos {
+  display: inline-block;
+  padding: 0.3rem 0.625rem;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: white;
+  background: linear-gradient(135deg, #0d9488, #2dd4bf);
+  border-radius: 8px;
+  text-transform: lowercase;
+  margin-bottom: 0.875rem;
+}
+
+/* Definitions List */
+.definitions-list {
+  margin-bottom: 1rem;
+}
+
+.definition-item {
+  display: flex;
+  gap: 0.625rem;
+  padding: 0.625rem 0;
+  border-bottom: 1px solid rgba(13, 148, 136, 0.1);
+}
+
+.definition-item:last-child {
+  border-bottom: none;
+}
+
+.definition-number {
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  color: white;
+  background: linear-gradient(135deg, #0d9488, #2dd4bf);
+  border-radius: 50%;
+}
+
+.definition-text {
+  flex: 1;
+  font-size: 0.875rem;
+  color: #475569;
+  line-height: 1.6;
+}
+
+/* Examples List */
+.examples-list {
+  margin-bottom: 1rem;
+}
+
+.examples-header {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: #0d9488;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  margin-bottom: 0.5rem;
+}
+
+.examples-header svg {
+  width: 14px;
+  height: 14px;
+  stroke-width: 2;
+}
+
+.example-item {
+  padding: 0.625rem 0.875rem;
+  background: white;
+  border-left: 2px solid #0d9488;
+  border-radius: 6px;
+  font-size: 0.8125rem;
+  color: #475569;
+  line-height: 1.5;
+  font-style: italic;
+  margin-bottom: 0.5rem;
+}
+
+.example-item:last-child {
+  margin-bottom: 0;
+}
+
+/* Related Words */
+.related-words {
+  margin-bottom: 1rem;
+}
+
+.related-words:last-child {
+  margin-bottom: 0;
+}
+
+.related-header {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: #0d9488;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  margin-bottom: 0.5rem;
+}
+
+.related-header svg {
+  width: 14px;
+  height: 14px;
+  stroke-width: 2;
+}
+
+.related-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.related-tag {
+  padding: 0.3rem 0.625rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: #0d9488;
+  background: rgba(13, 148, 136, 0.1);
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.related-tag:hover {
+  background: rgba(13, 148, 136, 0.2);
+  transform: translateY(-1px);
+}
+
+.antonym-tag {
+  color: #dc2626;
+  background: rgba(239, 68, 68, 0.1);
+}
+
+.antonym-tag:hover {
+  background: rgba(239, 68, 68, 0.2);
+}
+
+.related-more {
+  padding: 0.3rem 0.625rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: #475569;
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 8px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .word-detail-page {
+    padding: 1rem;
+  }
+
+  .word-title-section {
+    padding: 1.25rem;
+  }
+
+  .title-row {
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .title-left {
+    width: 100%;
+  }
+
+  .word-title {
+    font-size: 1.875rem;
+  }
+
+  .phonetics-container {
+    padding: 0.875rem;
+  }
+
+  .phonetic-text {
+    font-size: 0.9375rem;
+  }
+
+  .audio-btn {
+    width: 32px;
+    height: 32px;
+  }
+
+  .audio-btn svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  .mastery-info {
+    flex-direction: row;
+    align-items: center;
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .mastery-badge {
+    min-width: auto;
+  }
+
+  .section {
+    padding: 1.25rem;
+  }
+
+  .meaning-card {
+    padding: 1rem;
+  }
+
+  .word-forms-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .related-group {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .related-tags-inline {
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .word-detail-page {
+    padding: 0.75rem;
+  }
+
+  .word-title-section {
+    padding: 1rem;
+  }
+
+  .word-main {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+
+  .word-title {
+    font-size: 1.5rem;
+  }
+
+  .phonetics-container {
+    padding: 0.75rem;
+  }
+
+  .phonetic-content {
+    padding: 0.5rem 0.75rem;
+  }
+
+  .phonetic-text {
+    font-size: 0.875rem;
+  }
+
+  .audio-btn {
+    width: 32px;
+    height: 32px;
+  }
+
+  .mastery-value {
+    font-size: 1.5rem;
+  }
+
+  .forms-category {
+    padding: 0.875rem;
+  }
+
+  .form-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.375rem;
+  }
+
+  .header-related-words {
+    gap: 0.75rem;
+  }
+}
+</style>

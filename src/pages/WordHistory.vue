@@ -10,9 +10,12 @@
 
     <!-- Main Content -->
     <div class="content-wrapper">
-      <!-- Word Table Section -->
-      <section class="table-section glass-card">
-        <WordTable />
+      <!-- Word Display Section -->
+      <section class="display-section glass-card">
+        <transition name="view-fade" mode="out-in">
+          <WordGrid v-if="viewMode === 'grid'" key="grid" @change-view="handleViewChange" />
+          <WordTable v-else key="table" @change-view="handleViewChange" />
+        </transition>
       </section>
     </div>
 
@@ -40,9 +43,11 @@
 
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue'
+import WordGrid from '@/components/word-display/WordGrid.vue'
 import WordTable from '@/components/word-display/WordTable.vue'
 
 const showScrollTop = ref(false)
+const viewMode = ref<'grid' | 'table'>('grid')
 
 const scrollToTop = () => {
   window.scrollTo({ top: 0, behavior: 'smooth' })
@@ -52,12 +57,23 @@ const handleScroll = () => {
   showScrollTop.value = window.scrollY > 300
 }
 
+const handleViewChange = (mode: 'grid' | 'table') => {
+  viewMode.value = mode
+}
+
 onMounted(() => {
   window.addEventListener('scroll', handleScroll)
+  // Load saved view mode from localStorage
+  const savedViewMode = localStorage.getItem('wordHistoryViewMode')
+  if (savedViewMode === 'table' || savedViewMode === 'grid') {
+    viewMode.value = savedViewMode
+  }
 })
 
 onUnmounted(() => {
   window.removeEventListener('scroll', handleScroll)
+  // Save view mode to localStorage
+  localStorage.setItem('wordHistoryViewMode', viewMode.value)
 })
 </script>
 
@@ -192,8 +208,24 @@ onUnmounted(() => {
 }
 
 /* ===== Table Section ===== */
-.table-section {
+.display-section {
   animation-delay: 0.1s;
+}
+
+/* ===== View Transition ===== */
+.view-fade-enter-active,
+.view-fade-leave-active {
+  transition: all 0.3s ease;
+}
+
+.view-fade-enter-from {
+  opacity: 0;
+  transform: translateY(20px);
+}
+
+.view-fade-leave-to {
+  opacity: 0;
+  transform: translateY(-20px);
 }
 
 /* ===== Scroll to Top Button ===== */

@@ -1,0 +1,360 @@
+/* Big Big Word Extension - Content Script Styles */
+/* Claymorphism Design v3.0 - Ultra Playful & Modern */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+.bbw-popup {
+  position: absolute;
+  z-index: 2147483647;
+  max-width: 360px;
+  min-width: 280px;
+  background: white;
+  border-radius: 12px;
+  box-shadow:
+    0 4px 12px rgba(0, 0, 0, 0.08),
+    0 2px 4px rgba(0, 0, 0, 0.04),
+    0 0 0 1px rgba(0, 0, 0, 0.04);
+  font-family:
+    'Inter',
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    Roboto,
+    sans-serif;
+  opacity: 0;
+  transform: translateY(-8px);
+  transition:
+    opacity 0.2s ease-out,
+    transform 0.2s ease-out;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.bbw-popup.bbw-visible {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: all;
+}
+
+@keyframes popup-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.bbw-popup-content {
+  padding: 0;
+  overflow: hidden;
+  border-radius: 24px;
+}
+
+/* ===== Header ===== */
+.bbw-popup-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  border-bottom: 1px solid #f1f5f9;
+  background: white;
+}
+
+.bbw-word {
+  font-size: 18px;
+  font-weight: 600;
+  color: #0f172a;
+  letter-spacing: -0.01em;
+}
+
+.bbw-close {
+  background: transparent;
+  border: none;
+  color: #64748b;
+  font-size: 20px;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease-out;
+  line-height: 1;
+  padding: 0;
+  font-weight: 400;
+}
+
+.bbw-close:hover {
+  background: #f1f5f9;
+  color: #0f172a;
+}
+
+.bbw-close:active {
+  background: #e2e8f0;
+}
+
+/* ===== Body ===== */
+.bbw-popup-body {
+  padding: 16px;
+  max-height: 400px;
+  overflow-y: auto;
+  background: white;
+}
+
+.bbw-loading {
+  text-align: center;
+  color: #64748b;
+  padding: 32px 20px;
+  font-size: 14px;
+  font-weight: 500;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.bbw-loading::before {
+  content: '';
+  width: 24px;
+  height: 24px;
+  border: 2px solid #e2e8f0;
+  border-top-color: #10b981;
+  border-radius: 50%;
+  animation: loading-spin 0.6s linear infinite;
+}
+
+@keyframes loading-spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* ===== Phonetic Section ===== */
+.bbw-phonetic {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  margin-bottom: 12px;
+}
+
+.bbw-phonetic-text {
+  flex: 1;
+  font-family: 'SF Mono', 'Monaco', 'Courier New', monospace;
+  color: #475569;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.bbw-play-btn {
+  background: #10b981;
+  border: none;
+  color: white;
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease-out;
+  font-size: 14px;
+  padding: 0;
+  flex-shrink: 0;
+}
+
+.bbw-play-btn:hover {
+  background: #059669;
+}
+
+.bbw-play-btn:active {
+  background: #047857;
+}
+
+.bbw-play-btn.playing {
+  opacity: 0.7;
+}
+
+/* ===== Meanings Section ===== */
+.bbw-meanings {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.bbw-meaning {
+  padding: 0;
+}
+
+.bbw-pos {
+  display: inline-flex;
+  align-items: center;
+  font-size: 12px;
+  font-weight: 500;
+  color: #64748b;
+  font-style: italic;
+  margin-bottom: 6px;
+}
+
+.bbw-definitions {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.bbw-definitions li {
+  color: #334155;
+  font-size: 14px;
+  line-height: 1.6;
+  padding-left: 16px;
+  position: relative;
+  font-weight: 400;
+}
+
+.bbw-definitions li::before {
+  content: '•';
+  position: absolute;
+  left: 0;
+  color: #cbd5e1;
+  font-weight: 700;
+}
+
+.bbw-error {
+  color: #dc2626;
+  text-align: center;
+  padding: 24px 16px;
+  margin: 0;
+  font-size: 14px;
+  font-weight: 500;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+}
+
+/* ===== Footer ===== */
+.bbw-popup-footer {
+  padding: 12px 16px;
+  border-top: 1px solid #f1f5f9;
+  background: white;
+  display: flex;
+  gap: 8px;
+}
+
+.bbw-add-btn {
+  flex: 1;
+  padding: 8px 14px;
+  background: #10b981;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease-out;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.bbw-add-btn:hover {
+  background: #059669;
+}
+
+.bbw-add-btn:active {
+  background: #047857;
+}
+
+.bbw-open-app-btn {
+  flex: 1;
+  padding: 8px 14px;
+  background: white;
+  color: #64748b;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease-out;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.bbw-open-app-btn:hover {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+  color: #475569;
+}
+
+.bbw-open-app-btn:active {
+  background: #f1f5f9;
+}
+
+/* ===== Scrollbar ===== */
+.bbw-popup-body::-webkit-scrollbar {
+  width: 6px;
+}
+
+.bbw-popup-body::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.bbw-popup-body::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+
+.bbw-popup-body::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* ===== Responsive Design ===== */
+@media (max-width: 480px) {
+  .bbw-popup {
+    max-width: 92vw;
+    min-width: 260px;
+  }
+
+  .bbw-word {
+    font-size: 16px;
+  }
+
+  .bbw-popup-footer {
+    flex-direction: column;
+  }
+}
+
+/* ===== Accessibility ===== */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ===== Focus States ===== */
+.bbw-close:focus-visible,
+.bbw-play-btn:focus-visible,
+.bbw-add-btn:focus-visible,
+.bbw-open-app-btn:focus-visible {
+  outline: 2px solid #10b981;
+  outline-offset: 2px;
+}

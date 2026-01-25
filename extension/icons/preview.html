@@ -1,0 +1,475 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>图标预览 - Big Big Word</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        min-height: 100vh;
+        padding: 40px 20px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+
+      .container {
+        background: white;
+        border-radius: 20px;
+        padding: 40px;
+        max-width: 900px;
+        width: 100%;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      }
+
+      h1 {
+        color: #10b981;
+        margin-bottom: 10px;
+        font-size: 32px;
+        text-align: center;
+      }
+
+      .subtitle {
+        color: #6b7280;
+        margin-bottom: 30px;
+        font-size: 16px;
+        text-align: center;
+      }
+
+      .preview-section {
+        margin-bottom: 40px;
+      }
+
+      .preview-section h2 {
+        color: #374151;
+        font-size: 20px;
+        margin-bottom: 20px;
+        padding-bottom: 10px;
+        border-bottom: 2px solid #10b981;
+      }
+
+      .icon-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 20px;
+        margin-bottom: 20px;
+      }
+
+      .icon-item {
+        background: #f9fafb;
+        border: 2px solid #e5e7eb;
+        border-radius: 12px;
+        padding: 20px;
+        text-align: center;
+        transition:
+          transform 0.2s,
+          box-shadow 0.2s;
+      }
+
+      .icon-item:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 16px rgba(16, 185, 129, 0.2);
+        border-color: #10b981;
+      }
+
+      .icon-item h3 {
+        color: #374151;
+        font-size: 14px;
+        margin-bottom: 15px;
+        font-weight: 600;
+      }
+
+      .icon-display {
+        background: white;
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 10px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100px;
+      }
+
+      .icon-info {
+        font-size: 12px;
+        color: #6b7280;
+        margin-top: 8px;
+      }
+
+      canvas {
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      }
+
+      .color-palette {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 15px;
+        margin-top: 20px;
+      }
+
+      .color-item {
+        background: white;
+        border: 2px solid #e5e7eb;
+        border-radius: 12px;
+        padding: 15px;
+        display: flex;
+        align-items: center;
+        gap: 15px;
+      }
+
+      .color-swatch {
+        width: 50px;
+        height: 50px;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      }
+
+      .color-info h4 {
+        color: #374151;
+        font-size: 14px;
+        margin-bottom: 4px;
+      }
+
+      .color-info p {
+        color: #6b7280;
+        font-size: 12px;
+        font-family: 'Monaco', 'Courier New', monospace;
+      }
+
+      .action-buttons {
+        display: flex;
+        gap: 15px;
+        margin-top: 30px;
+      }
+
+      .btn {
+        flex: 1;
+        padding: 16px;
+        border: none;
+        border-radius: 12px;
+        font-size: 16px;
+        font-weight: 700;
+        cursor: pointer;
+        transition:
+          transform 0.2s,
+          box-shadow 0.2s;
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+      }
+
+      .btn:hover {
+        transform: translateY(-2px);
+      }
+
+      .btn-primary {
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        color: white;
+        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+      }
+
+      .btn-primary:hover {
+        box-shadow: 0 6px 16px rgba(16, 185, 129, 0.4);
+      }
+
+      .btn-secondary {
+        background: #f3f4f6;
+        color: #374151;
+        border: 2px solid #e5e7eb;
+      }
+
+      .btn-secondary:hover {
+        background: #e5e7eb;
+      }
+
+      .status {
+        background: #d1fae5;
+        color: #065f46;
+        padding: 16px;
+        border-radius: 12px;
+        margin-top: 20px;
+        text-align: center;
+        font-weight: 600;
+      }
+
+      .comparison {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+        margin-top: 20px;
+      }
+
+      .comparison-item {
+        background: #f9fafb;
+        border: 2px solid #e5e7eb;
+        border-radius: 12px;
+        padding: 20px;
+        text-align: center;
+      }
+
+      .comparison-item h3 {
+        color: #374151;
+        font-size: 16px;
+        margin-bottom: 15px;
+      }
+
+      .toolbar-preview {
+        background: #1f2937;
+        padding: 8px;
+        border-radius: 8px;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        margin-top: 10px;
+      }
+
+      .toolbar-icon {
+        width: 24px;
+        height: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>🎨 图标预览</h1>
+      <p class="subtitle">Big Big Word Chrome Extension - 绿色主题</p>
+
+      <!-- 图标预览 -->
+      <div class="preview-section">
+        <h2>📦 生成的图标（所有尺寸）</h2>
+        <div class="icon-grid">
+          <div class="icon-item">
+            <h3>16×16 像素</h3>
+            <div class="icon-display">
+              <canvas id="icon16" width="16" height="16"></canvas>
+            </div>
+            <div class="icon-info">浏览器工具栏</div>
+          </div>
+
+          <div class="icon-item">
+            <h3>32×32 像素</h3>
+            <div class="icon-display">
+              <canvas id="icon32" width="32" height="32"></canvas>
+            </div>
+            <div class="icon-info">扩展管理页面</div>
+          </div>
+
+          <div class="icon-item">
+            <h3>48×48 像素</h3>
+            <div class="icon-display">
+              <canvas id="icon48" width="48" height="48"></canvas>
+            </div>
+            <div class="icon-info">扩展管理页面</div>
+          </div>
+
+          <div class="icon-item">
+            <h3>128×128 像素</h3>
+            <div class="icon-display">
+              <canvas id="icon128" width="128" height="128"></canvas>
+            </div>
+            <div class="icon-info">Chrome Web Store</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 实际使用场景 -->
+      <div class="preview-section">
+        <h2>🖥️ 实际使用场景</h2>
+        <div class="comparison">
+          <div class="comparison-item">
+            <h3>浏览器工具栏</h3>
+            <div class="toolbar-preview">
+              <div class="toolbar-icon">
+                <canvas id="toolbar-icon" width="16" height="16"></canvas>
+              </div>
+              <span style="color: white; font-size: 12px">Big Big Word</span>
+            </div>
+          </div>
+
+          <div class="comparison-item">
+            <h3>扩展管理页面</h3>
+            <div
+              style="
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 15px;
+                margin-top: 10px;
+              "
+            >
+              <canvas id="extension-icon" width="48" height="48"></canvas>
+              <div style="text-align: left">
+                <div style="font-weight: 600; color: #374151">Big Big Word</div>
+                <div style="font-size: 12px; color: #6b7280">单词学习助手</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 颜色方案 -->
+      <div class="preview-section">
+        <h2>🎨 颜色方案</h2>
+        <div class="color-palette">
+          <div class="color-item">
+            <div
+              class="color-swatch"
+              style="background: linear-gradient(135deg, #10b981 0%, #059669 100%)"
+            ></div>
+            <div class="color-info">
+              <h4>主渐变</h4>
+              <p>#10B981 → #059669</p>
+            </div>
+          </div>
+
+          <div class="color-item">
+            <div class="color-swatch" style="background: #10b981"></div>
+            <div class="color-info">
+              <h4>Emerald-500</h4>
+              <p>#10B981</p>
+            </div>
+          </div>
+
+          <div class="color-item">
+            <div class="color-swatch" style="background: #059669"></div>
+            <div class="color-info">
+              <h4>Emerald-600</h4>
+              <p>#059669</p>
+            </div>
+          </div>
+
+          <div class="color-item">
+            <div class="color-swatch" style="background: #047857"></div>
+            <div class="color-info">
+              <h4>Emerald-700</h4>
+              <p>#047857</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 操作按钮 -->
+      <div class="action-buttons">
+        <a href="generate-icons.html" class="btn btn-primary">
+          <span>🚀</span>
+          <span>打开图标生成器</span>
+        </a>
+        <button class="btn btn-secondary" onclick="window.location.reload()">
+          <span>🔄</span>
+          <span>刷新预览</span>
+        </button>
+      </div>
+
+      <div class="status">✅ 所有图标已准备就绪！点击上方按钮生成并下载图标文件</div>
+    </div>
+
+    <script>
+      // Draw icon function
+      const drawIcon = (canvas, size) => {
+        const ctx = canvas.getContext('2d')
+        const scale = size / 128
+
+        // Clear canvas
+        ctx.clearRect(0, 0, size, size)
+
+        // Create gradient
+        const gradient = ctx.createLinearGradient(0, 0, size, size)
+        gradient.addColorStop(0, '#10B981')
+        gradient.addColorStop(1, '#059669')
+
+        // Draw rounded rectangle background
+        const radius = 24 * scale
+        ctx.fillStyle = gradient
+        ctx.beginPath()
+        ctx.roundRect(0, 0, size, size, radius)
+        ctx.fill()
+
+        // Draw book
+        const bookLeft = 35 * scale
+        const bookTop = 40 * scale
+        const bookWidth = 29 * scale
+        const bookHeight = 48 * scale
+        const bookRight = 64 * scale
+
+        // Left page
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.95)'
+        ctx.fillRect(bookLeft, bookTop, bookWidth, bookHeight)
+
+        // Right page
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.85)'
+        ctx.fillRect(bookRight, bookTop, bookWidth, bookHeight)
+
+        // Book spine
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.7)'
+        ctx.fillRect(62 * scale, bookTop, 4 * scale, bookHeight)
+
+        // Letter "W"
+        ctx.fillStyle = '#10B981'
+        ctx.font = `bold ${28 * scale}px Arial, sans-serif`
+        ctx.textAlign = 'center'
+        ctx.textBaseline = 'middle'
+        ctx.fillText('W', 49.5 * scale, 68 * scale)
+
+        // Decorative lines on right page
+        ctx.strokeStyle = 'rgba(16, 185, 129, 0.6)'
+        ctx.lineWidth = 2 * scale
+
+        const lineX1 = 70 * scale
+        const lineX2 = 87 * scale
+        const lineY = [52, 60, 68, 76]
+
+        lineY.forEach((y, index) => {
+          ctx.beginPath()
+          ctx.moveTo(lineX1, y * scale)
+          ctx.lineTo(index === 3 ? 82 * scale : lineX2, y * scale)
+          ctx.stroke()
+        })
+      }
+
+      // Add roundRect polyfill
+      if (!CanvasRenderingContext2D.prototype.roundRect) {
+        CanvasRenderingContext2D.prototype.roundRect = function (x, y, width, height, radius) {
+          this.moveTo(x + radius, y)
+          this.lineTo(x + width - radius, y)
+          this.quadraticCurveTo(x + width, y, x + width, y + radius)
+          this.lineTo(x + width, y + height - radius)
+          this.quadraticCurveTo(x + width, y + height, x + width - radius, y + height)
+          this.lineTo(x + radius, y + height)
+          this.quadraticCurveTo(x, y + height, x, y + height - radius)
+          this.lineTo(x, y + radius)
+          this.quadraticCurveTo(x, y, x + radius, y)
+          this.closePath()
+        }
+      }
+
+      // Draw all icons
+      const sizes = [16, 32, 48, 128]
+      sizes.forEach((size) => {
+        const canvas = document.getElementById(`icon${size}`)
+        if (canvas) drawIcon(canvas, size)
+      })
+
+      // Draw toolbar icon
+      const toolbarCanvas = document.getElementById('toolbar-icon')
+      if (toolbarCanvas) drawIcon(toolbarCanvas, 16)
+
+      // Draw extension icon
+      const extensionCanvas = document.getElementById('extension-icon')
+      if (extensionCanvas) drawIcon(extensionCanvas, 48)
+    </script>
+  </body>
+</html>
