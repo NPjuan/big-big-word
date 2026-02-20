@@ -65,16 +65,26 @@ const displayWords = ref<any[]>([])
 const isAnimating = ref(false)
 const firstCardDragX = ref(0)
 
-// Initialize display words with cycling capability
+// Pick the next best word to show based on SRS priority, excluding IDs in the set
+const pickNextWord = (excludeIds: Set<string>) => {
+  return wordStore.wordsByReviewPriority.find((w) => !excludeIds.has(w.id)) ?? null
+}
+
+// Get latest data snapshot for a word from the store (reflects SRS updates)
+const getLatestWordData = (id: string) => {
+  return wordStore.words.find((w) => w.id === id)
+}
+
+// Initialize display words from priority queue
 const initializeDisplayWords = () => {
   if (wordStore.wordCount === 0) {
     displayWords.value = []
     return
   }
 
-  // Show up to 4 cards, cycling through all words
   const maxCards = Math.min(4, wordStore.wordCount)
-  displayWords.value = wordStore.words.slice(0, maxCards).map((word, index) => ({
+  const prioritized = wordStore.wordsByReviewPriority
+  displayWords.value = prioritized.slice(0, maxCards).map((word, index) => ({
     ...word,
     displayIndex: index,
   }))
@@ -85,46 +95,34 @@ const handleSwipeRight = () => {
 
   isAnimating.value = true
 
-  // Get the current card being swiped
-  const currentCard = displayWords.value[0]
-
   // Update mastery for right swipe (user knows the word)
+  const currentCard = displayWords.value[0]
   if (currentCard) {
     wordStore.updateMasteryRight(currentCard.id)
   }
 
-  // Wait for card leaving animation to complete (200ms for smoother transition)
+  // Wait for card leaving animation to complete
   setTimeout(() => {
     const removedCard = displayWords.value.shift()
-    if (removedCard && wordStore.wordCount > 1) {
-      // Find the next word to show
-      const currentIds = displayWords.value.map((w) => w.id)
-      const nextWord = wordStore.words.find(
-        (w) => !currentIds.includes(w.id) && w.id !== removedCard.id,
-      )
+
+    if (removedCard && wordStore.wordCount > 0) {
+      // Exclude only the cards still visible in the deck (NOT the removed one)
+      const currentIds = new Set(displayWords.value.map((w: any) => w.id))
+      const nextWord = pickNextWord(currentIds)
 
       if (nextWord) {
+        // Use fresh data snapshot from store (reflects updated SRS fields)
+        const freshData = getLatestWordData(nextWord.id)
         displayWords.value.push({
-          ...nextWord,
-          displayIndex: displayWords.value.length,
-        })
-      } else {
-        // If no new word, cycle back to the removed card
-        displayWords.value.push({
-          ...removedCard,
+          ...(freshData ?? nextWord),
           displayIndex: displayWords.value.length,
         })
       }
-    } else if (wordStore.wordCount === 1) {
-      // Single word: just re-add it
-      displayWords.value.push({
-        ...removedCard,
-        displayIndex: 0,
-      })
+      // If no word found at all (shouldn't happen), deck just shrinks by 1
     }
 
-    // Update display indices
-    displayWords.value.forEach((word, index) => {
+    // Refresh display indices
+    displayWords.value.forEach((word: any, index: number) => {
       word.displayIndex = index
     })
 
@@ -136,46 +134,33 @@ const handleSwipeLeft = () => {
 
   isAnimating.value = true
 
-  // Get the current card being swiped
-  const currentCard = displayWords.value[0]
-
   // Update mastery for left swipe (user doesn't know the word well)
+  const currentCard = displayWords.value[0]
   if (currentCard) {
     wordStore.updateMasteryLeft(currentCard.id)
   }
 
-  // Wait for card leaving animation to complete (200ms for smoother transition)
+  // Wait for card leaving animation to complete
   setTimeout(() => {
     const removedCard = displayWords.value.shift()
-    if (removedCard && wordStore.wordCount > 1) {
-      // Find the next word to show
-      const currentIds = displayWords.value.map((w) => w.id)
-      const nextWord = wordStore.words.find(
-        (w) => !currentIds.includes(w.id) && w.id !== removedCard.id,
-      )
+
+    if (removedCard && wordStore.wordCount > 0) {
+      // Exclude only the cards still visible in the deck (NOT the removed one)
+      const currentIds = new Set(displayWords.value.map((w: any) => w.id))
+      const nextWord = pickNextWord(currentIds)
 
       if (nextWord) {
+        // Use fresh data snapshot from store (reflects updated SRS fields)
+        const freshData = getLatestWordData(nextWord.id)
         displayWords.value.push({
-          ...nextWord,
-          displayIndex: displayWords.value.length,
-        })
-      } else {
-        // If no new word, cycle back to the removed card
-        displayWords.value.push({
-          ...removedCard,
+          ...(freshData ?? nextWord),
           displayIndex: displayWords.value.length,
         })
       }
-    } else if (wordStore.wordCount === 1) {
-      // Single word: just re-add it
-      displayWords.value.push({
-        ...removedCard,
-        displayIndex: 0,
-      })
     }
 
-    // Update display indices
-    displayWords.value.forEach((word, index) => {
+    // Refresh display indices
+    displayWords.value.forEach((word: any, index: number) => {
       word.displayIndex = index
     })
 

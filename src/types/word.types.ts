@@ -11,6 +11,12 @@ export interface Word {
   lastReviewed?: string
   reviewCount: number
   mastery: number // 0-100
+
+  // Spaced Repetition System (SRS) fields
+  nextReviewDate: string // ISO date string, when this word should be reviewed next
+  reviewInterval: number // Current interval in days (0 = new word)
+  easeFactor: number // SM-2 ease factor (1.3 ~ 2.5), higher = easier to remember
+  consecutiveCorrect: number // Consecutive correct reviews streak
 }
 
 export interface ChineseMeaning {

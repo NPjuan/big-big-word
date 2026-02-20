@@ -21,15 +21,85 @@ export const useWordStore = defineStore('word', () => {
       .slice(0, 10),
   )
 
+  // Words sorted by review priority: due now > overdue > not yet due
+  // Within each group: lower mastery first, then harder words first
+  const wordsByReviewPriority = computed(() => {
+    const now = Date.now()
+    return [...words.value].sort((a, b) => {
+      const aNextTime = new Date(a.nextReviewDate).getTime()
+      const bNextTime = new Date(b.nextReviewDate).getTime()
+      const aDue = aNextTime <= now // is this word due for review?
+      const bDue = bNextTime <= now
+
+      // Due words come before not-yet-due words
+      if (aDue !== bDue) return aDue ? -1 : 1
+
+      if (aDue && bDue) {
+        // Both due: most overdue first
+        const aOverdue = now - aNextTime
+        const bOverdue = now - bNextTime
+        if (aOverdue !== bOverdue) return bOverdue - aOverdue
+      } else {
+        // Both not yet due: soonest due first
+        if (aNextTime !== bNextTime) return aNextTime - bNextTime
+      }
+
+      // Lower mastery first
+      if (a.mastery !== b.mastery) return a.mastery - b.mastery
+      // Harder words first (lower easeFactor)
+      return a.easeFactor - b.easeFactor
+    })
+  })
+
+  // --- SRS helpers ---
+
+  // Ensure a word has all SRS fields (backward compat for old data)
+  const ensureSRSFields = (w: any): Word => {
+    const now = new Date().toISOString()
+    return {
+      ...w,
+      nextReviewDate: w.nextReviewDate ?? now,
+      reviewInterval: w.reviewInterval ?? 0,
+      easeFactor: w.easeFactor ?? 2.5,
+      consecutiveCorrect: w.consecutiveCorrect ?? 0,
+    }
+  }
+
+  // SM-2 algorithm: calculate next review interval and ease factor
+  // quality: 0-5, where 0=total blackout, 5=perfect recall
+  const calculateSM2 = (
+    currentInterval: number,
+    currentEF: number,
+    quality: number,
+  ): { interval: number; easeFactor: number } => {
+    // Update ease factor
+    const newEF = Math.max(1.3, currentEF + (0.1 - (5 - quality) * (0.08 + (5 - quality) * 0.02)))
+
+    let newInterval: number
+    if (quality < 3) {
+      // Failed — reset to short interval
+      newInterval = 1
+    } else if (currentInterval === 0) {
+      newInterval = 1 // new word → review in 1 day
+    } else if (currentInterval === 1) {
+      newInterval = 3
+    } else {
+      newInterval = Math.round(currentInterval * newEF)
+    }
+
+    return { interval: newInterval, easeFactor: newEF }
+  }
+
   // Actions
   const loadWords = () => {
     try {
       const stored = localStorage.getItem('big-big-words')
       if (stored) {
-        words.value = JSON.parse(stored)
+        // Migrate old data that lacks SRS fields
+        words.value = (JSON.parse(stored) as any[]).map(ensureSRSFields)
       } else {
         // Load default words if no saved words exist
-        words.value = [...defaultWords]
+        words.value = defaultWords.map(ensureSRSFields)
         saveWords() // Save default words to localStorage
       }
     } catch (err) {
@@ -68,6 +138,7 @@ export const useWordStore = defineStore('word', () => {
       const chineseMeanings = await generateChineseMeanings(wordData.englishMeanings)
 
       // Create word object with API data
+      const now = new Date()
       const newWord: Word = {
         id: crypto.randomUUID(),
         word: wordData.word.toLowerCase(),
@@ -82,11 +153,16 @@ export const useWordStore = defineStore('word', () => {
           evolution: '',
           relatedWords: [],
           mnemonic: '',
-          generatedAt: new Date().toISOString(),
+          generatedAt: now.toISOString(),
         },
-        createdAt: new Date().toISOString(),
+        createdAt: now.toISOString(),
         reviewCount: 0,
         mastery: 0,
+        // SRS fields — immediately available for review
+        nextReviewDate: now.toISOString(),
+        reviewInterval: 0,
+        easeFactor: 2.5,
+        consecutiveCorrect: 0,
       }
 
       // Add to store
@@ -126,26 +202,44 @@ export const useWordStore = defineStore('word', () => {
     }
   }
 
-  // Update mastery when swiping right (mastered)
+  // Update mastery when swiping right (mastered) — quality = 5 (perfect recall)
   const updateMasteryRight = (id: string) => {
     const word = words.value.find((w) => w.id === id)
     if (word) {
+      const now = new Date()
       word.reviewCount++
-      word.lastReviewed = new Date().toISOString()
-      // Increase mastery by 10% when user confirms they know the word
+      word.lastReviewed = now.toISOString()
       word.mastery = Math.min(100, word.mastery + 10)
+      word.consecutiveCorrect++
+
+      const { interval, easeFactor } = calculateSM2(word.reviewInterval, word.easeFactor, 5)
+      word.reviewInterval = interval
+      word.easeFactor = easeFactor
+      const nextDate = new Date(now)
+      nextDate.setDate(nextDate.getDate() + interval)
+      word.nextReviewDate = nextDate.toISOString()
+
       saveWords()
     }
   }
 
-  // Update mastery when swiping left (not mastered yet)
+  // Update mastery when swiping left (not mastered yet) — quality = 2 (incorrect / hesitant)
   const updateMasteryLeft = (id: string) => {
     const word = words.value.find((w) => w.id === id)
     if (word) {
+      const now = new Date()
       word.reviewCount++
-      word.lastReviewed = new Date().toISOString()
-      // Decrease mastery by 5% when user indicates they don't know the word well
+      word.lastReviewed = now.toISOString()
       word.mastery = Math.max(0, word.mastery - 5)
+      word.consecutiveCorrect = 0
+
+      const { interval, easeFactor } = calculateSM2(word.reviewInterval, word.easeFactor, 2)
+      word.reviewInterval = interval
+      word.easeFactor = easeFactor
+      const nextDate = new Date(now)
+      nextDate.setDate(nextDate.getDate() + interval)
+      word.nextReviewDate = nextDate.toISOString()
+
       saveWords()
     }
   }
@@ -160,6 +254,7 @@ export const useWordStore = defineStore('word', () => {
     wordCount,
     masteredWords,
     recentWords,
+    wordsByReviewPriority,
     addWord,
     deleteWord,
     updateWord,
