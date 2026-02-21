@@ -54,11 +54,45 @@ export const useWordStore = defineStore('word', () => {
 
   // --- SRS helpers ---
 
-  // Ensure a word has all SRS fields (backward compat for old data)
+  // Ensure a word has all SRS fields and correct types (backward compat for old data)
   const ensureSRSFields = (w: any): Word => {
     const now = new Date().toISOString()
+
+    // Normalise partOfSpeech: old data may store it as a plain string
+    let partOfSpeech: string[]
+    if (Array.isArray(w.partOfSpeech)) {
+      partOfSpeech = w.partOfSpeech
+    } else if (typeof w.partOfSpeech === 'string' && w.partOfSpeech.trim().length > 0) {
+      partOfSpeech = [w.partOfSpeech.trim()]
+    } else {
+      partOfSpeech = []
+    }
+
+    // Deep-normalise englishMeaning items (ensure synonyms/antonyms/examples exist)
+    const englishMeaning = Array.isArray(w.englishMeaning)
+      ? w.englishMeaning.map((m: any) => ({
+          partOfSpeech: m.partOfSpeech ?? '',
+          definitions: Array.isArray(m.definitions) ? m.definitions : [],
+          examples: Array.isArray(m.examples) ? m.examples : [],
+          synonyms: Array.isArray(m.synonyms) ? m.synonyms : [],
+          antonyms: Array.isArray(m.antonyms) ? m.antonyms : [],
+        }))
+      : []
+
+    // Deep-normalise chineseMeaning items (ensure examples exist)
+    const chineseMeaning = Array.isArray(w.chineseMeaning)
+      ? w.chineseMeaning.map((m: any) => ({
+          partOfSpeech: m.partOfSpeech ?? '',
+          definitions: Array.isArray(m.definitions) ? m.definitions : [],
+          examples: Array.isArray(m.examples) ? m.examples : [],
+        }))
+      : []
+
     return {
       ...w,
+      partOfSpeech,
+      englishMeaning,
+      chineseMeaning,
       nextReviewDate: w.nextReviewDate ?? now,
       reviewInterval: w.reviewInterval ?? 0,
       easeFactor: w.easeFactor ?? 2.5,

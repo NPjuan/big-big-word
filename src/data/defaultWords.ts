@@ -6,7 +6,7 @@ export const defaultWords: Word[] = [
     word: 'serendipity',
     phonetic: '/ˌserənˈdɪpəti/',
     audioUrl: '',
-    partOfSpeech: 'noun',
+    partOfSpeech: ['noun'],
     chineseMeaning: [
       {
         partOfSpeech: 'n.',
@@ -25,6 +25,8 @@ export const defaultWords: Word[] = [
           'A fortunate stroke of serendipity brought the two old friends together.',
           'The discovery was a happy serendipity.',
         ],
+        synonyms: [],
+        antonyms: [],
       },
     ],
     etymology: {
@@ -51,7 +53,7 @@ export const defaultWords: Word[] = [
     word: 'ephemeral',
     phonetic: '/ɪˈfemərəl/',
     audioUrl: '',
-    partOfSpeech: 'adjective',
+    partOfSpeech: ['adjective'],
     chineseMeaning: [
       {
         partOfSpeech: 'adj.',
@@ -67,6 +69,8 @@ export const defaultWords: Word[] = [
           'Fame in the modern world is ephemeral.',
           'The ephemeral nature of social media trends.',
         ],
+        synonyms: [],
+        antonyms: [],
       },
     ],
     etymology: {
@@ -97,7 +101,7 @@ export const defaultWords: Word[] = [
     word: 'resilience',
     phonetic: '/rɪˈzɪliəns/',
     audioUrl: '',
-    partOfSpeech: 'noun',
+    partOfSpeech: ['noun'],
     chineseMeaning: [
       {
         partOfSpeech: 'n.',
@@ -116,6 +120,8 @@ export const defaultWords: Word[] = [
           'The resilience of the human spirit is remarkable.',
           'Building resilience helps us cope with stress.',
         ],
+        synonyms: [],
+        antonyms: [],
       },
     ],
     etymology: {
@@ -146,7 +152,7 @@ export const defaultWords: Word[] = [
     word: 'eloquent',
     phonetic: '/ˈeləkwənt/',
     audioUrl: '',
-    partOfSpeech: 'adjective',
+    partOfSpeech: ['adjective'],
     chineseMeaning: [
       {
         partOfSpeech: 'adj.',
@@ -165,6 +171,8 @@ export const defaultWords: Word[] = [
           'An eloquent speaker can move an audience to tears.',
           'His silence was eloquent.',
         ],
+        synonyms: [],
+        antonyms: [],
       },
     ],
     etymology: {

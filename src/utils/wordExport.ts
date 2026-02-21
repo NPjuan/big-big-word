@@ -153,7 +153,69 @@ const isValidWordObject = (obj: any): boolean => {
 }
 
 /**
- * Normalise an imported object into a full Word, filling in any missing fields.
+ * Normalise a single ChineseMeaning object, filling in missing fields.
+ */
+const normaliseChineseMeaning = (raw: any): ChineseMeaning => ({
+  partOfSpeech: typeof raw.partOfSpeech === 'string' ? raw.partOfSpeech : '',
+  definitions: Array.isArray(raw.definitions) ? raw.definitions : [],
+  examples: Array.isArray(raw.examples) ? raw.examples : [],
+})
+
+/**
+ * Normalise a single EnglishMeaning object, filling in missing fields.
+ */
+const normaliseEnglishMeaning = (raw: any): EnglishMeaning => ({
+  partOfSpeech: typeof raw.partOfSpeech === 'string' ? raw.partOfSpeech : '',
+  definitions: Array.isArray(raw.definitions) ? raw.definitions : [],
+  examples: Array.isArray(raw.examples) ? raw.examples : [],
+  synonyms: Array.isArray(raw.synonyms) ? raw.synonyms : [],
+  antonyms: Array.isArray(raw.antonyms) ? raw.antonyms : [],
+})
+
+/**
+ * Normalise an Etymology object, filling in missing fields.
+ */
+const normaliseEtymology = (raw: any, now: string): Etymology => {
+  if (!raw || typeof raw !== 'object') {
+    return {
+      roots: [],
+      origin: '',
+      evolution: '',
+      relatedWords: [],
+      mnemonic: '',
+      generatedAt: now,
+    }
+  }
+  return {
+    roots: Array.isArray(raw.roots)
+      ? raw.roots.map(
+          (r: any): WordRoot => ({
+            root: typeof r.root === 'string' ? r.root : '',
+            meaning: typeof r.meaning === 'string' ? r.meaning : '',
+            language: typeof r.language === 'string' ? r.language : '',
+          }),
+        )
+      : [],
+    origin: typeof raw.origin === 'string' ? raw.origin : '',
+    evolution: typeof raw.evolution === 'string' ? raw.evolution : '',
+    relatedWords: Array.isArray(raw.relatedWords) ? raw.relatedWords : [],
+    mnemonic: typeof raw.mnemonic === 'string' ? raw.mnemonic : '',
+    generatedAt: typeof raw.generatedAt === 'string' ? raw.generatedAt : now,
+  }
+}
+
+/**
+ * Normalise partOfSpeech: accept both string and string[] from exported data.
+ */
+const normalisePartOfSpeech = (raw: any): string[] => {
+  if (Array.isArray(raw)) return raw.filter((s: any) => typeof s === 'string')
+  if (typeof raw === 'string' && raw.trim().length > 0) return [raw.trim()]
+  return []
+}
+
+/**
+ * Normalise an imported object into a full Word, filling in any missing fields
+ * including deep normalisation of nested objects.
  */
 const normaliseImportedWord = (raw: any): Word => {
   const now = new Date().toISOString()
@@ -162,17 +224,14 @@ const normaliseImportedWord = (raw: any): Word => {
     word: String(raw.word).trim().toLowerCase(),
     phonetic: raw.phonetic ?? '',
     audioUrl: raw.audioUrl ?? undefined,
-    partOfSpeech: Array.isArray(raw.partOfSpeech) ? raw.partOfSpeech : [],
-    chineseMeaning: Array.isArray(raw.chineseMeaning) ? raw.chineseMeaning : [],
-    englishMeaning: Array.isArray(raw.englishMeaning) ? raw.englishMeaning : [],
-    etymology: raw.etymology ?? {
-      roots: [],
-      origin: '',
-      evolution: '',
-      relatedWords: [],
-      mnemonic: '',
-      generatedAt: now,
-    },
+    partOfSpeech: normalisePartOfSpeech(raw.partOfSpeech),
+    chineseMeaning: Array.isArray(raw.chineseMeaning)
+      ? raw.chineseMeaning.map(normaliseChineseMeaning)
+      : [],
+    englishMeaning: Array.isArray(raw.englishMeaning)
+      ? raw.englishMeaning.map(normaliseEnglishMeaning)
+      : [],
+    etymology: normaliseEtymology(raw.etymology, now),
     createdAt: raw.createdAt ?? now,
     lastReviewed: raw.lastReviewed ?? undefined,
     reviewCount: typeof raw.reviewCount === 'number' ? raw.reviewCount : 0,
