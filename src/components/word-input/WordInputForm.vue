@@ -21,6 +21,20 @@
 
     <!-- Input Form -->
     <div class="input-form">
+      <!-- Loading Progress Tips -->
+      <transition name="slide-fade">
+        <div v-if="wordStore.loadingStep" class="progress-tip">
+          <div class="progress-tip-inner">
+            <div class="progress-dot-container">
+              <span class="progress-dot"></span>
+              <span class="progress-dot"></span>
+              <span class="progress-dot"></span>
+            </div>
+            <span class="progress-text">{{ wordStore.loadingStep }}</span>
+          </div>
+        </div>
+      </transition>
+
       <div
         class="input-wrapper"
         :class="{ 'input-focused': isFocused, 'input-error': !!errorMessage }"
@@ -541,6 +555,76 @@ const handleKeyDown = (event: KeyboardEvent) => {
   width: 18px;
   height: 18px;
   stroke-width: 2.5;
+}
+
+/* ===== Progress Tips ===== */
+.progress-tip {
+  overflow: hidden;
+}
+
+.progress-tip-inner {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 0.625rem 1rem;
+  background: linear-gradient(135deg, rgba(13, 148, 136, 0.06), rgba(45, 212, 191, 0.06));
+  border: 1px solid rgba(13, 148, 136, 0.15);
+  border-radius: 10px;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: #0d9488;
+  animation: tipSlideIn 0.3s ease-out;
+}
+
+@keyframes tipSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.progress-dot-container {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  flex-shrink: 0;
+}
+
+.progress-dot {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: #0d9488;
+  animation: dotPulse 1.4s ease-in-out infinite;
+}
+
+.progress-dot:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.progress-dot:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes dotPulse {
+  0%,
+  80%,
+  100% {
+    opacity: 0.3;
+    transform: scale(0.8);
+  }
+  40% {
+    opacity: 1;
+    transform: scale(1.2);
+  }
+}
+
+.progress-text {
+  line-height: 1.4;
 }
 
 /* ===== Transitions ===== */

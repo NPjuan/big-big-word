@@ -16,14 +16,6 @@
         <div class="header-content">
           <h2 class="header-title">Word Collection</h2>
           <div class="word-count-badge">
-            <svg class="badge-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-              <path
-                d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              />
-            </svg>
             <span
               >{{ wordStore.wordCount }} {{ wordStore.wordCount === 1 ? 'word' : 'words' }}</span
             >
@@ -32,38 +24,7 @@
       </div>
 
       <div class="header-right">
-        <!-- View Toggle -->
-        <div class="view-toggle">
-          <button
-            class="toggle-btn"
-            :class="{ active: viewMode === 'grid' }"
-            @click="handleViewChange('grid')"
-            aria-label="Grid view"
-          >
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
-              <path
-                d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"
-                stroke-width="2"
-              />
-            </svg>
-          </button>
-          <button
-            class="toggle-btn active"
-            :class="{ active: viewMode === 'table' }"
-            @click="handleViewChange('table')"
-            aria-label="Table view"
-          >
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
-              <path
-                d="M4 6h16M4 12h16M4 18h16"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              />
-            </svg>
-          </button>
-        </div>
-
+        <!-- Search -->
         <div class="search-wrapper">
           <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
             <path
@@ -92,6 +53,38 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
               <path
                 d="M6 18L18 6M6 6l12 12"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+          </button>
+        </div>
+
+        <!-- View Toggle -->
+        <div class="view-toggle">
+          <button
+            class="toggle-btn"
+            :class="{ active: viewMode === 'grid' }"
+            @click="handleViewChange('grid')"
+            aria-label="Grid view"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <path
+                d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"
+                stroke-width="2"
+              />
+            </svg>
+          </button>
+          <button
+            class="toggle-btn"
+            :class="{ active: viewMode === 'table' }"
+            @click="handleViewChange('table')"
+            aria-label="Table view"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <path
+                d="M4 6h16M4 12h16M4 18h16"
                 stroke-width="2"
                 stroke-linecap="round"
                 stroke-linejoin="round"
@@ -598,6 +591,10 @@ onUnmounted(() => {
 /* Container */
 .word-table-container {
   padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
 }
 
 /* Table Header */
@@ -605,32 +602,33 @@ onUnmounted(() => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 1.25rem;
-  gap: 1.25rem;
+  margin-bottom: 2rem;
+  gap: 1.5rem;
   flex-wrap: wrap;
+  flex-shrink: 0;
 }
 
 .header-left {
   display: flex;
   align-items: center;
-  gap: 0.875rem;
+  gap: 1rem;
 }
 
 .header-icon-wrapper {
-  width: 44px;
-  height: 44px;
-  border-radius: 12px;
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
   background: linear-gradient(135deg, #0d9488 0%, #2dd4bf 100%);
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 6px 18px rgba(13, 148, 136, 0.35);
+  box-shadow: 0 6px 20px rgba(13, 148, 136, 0.35);
   flex-shrink: 0;
 }
 
 .header-icon {
-  width: 22px;
-  height: 22px;
+  width: 24px;
+  height: 24px;
   color: white;
   stroke-width: 2;
 }
@@ -638,11 +636,11 @@ onUnmounted(() => {
 .header-content {
   display: flex;
   flex-direction: column;
-  gap: 0.375rem;
+  gap: 0.5rem;
 }
 
 .header-title {
-  font-size: 1.375rem;
+  font-size: 1.5rem;
   font-weight: 800;
   color: #0f172a;
   margin: 0;
@@ -654,19 +652,13 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   gap: 0.375rem;
-  padding: 0.375rem 0.75rem;
+  padding: 0.375rem 0.875rem;
   background: linear-gradient(135deg, rgba(13, 148, 136, 0.1), rgba(45, 212, 191, 0.1));
   border-radius: 10px;
   font-size: 0.75rem;
   font-weight: 700;
   color: #0d9488;
   width: fit-content;
-}
-
-.badge-icon {
-  width: 14px;
-  height: 14px;
-  stroke-width: 2.5;
 }
 
 .header-right {
@@ -725,7 +717,7 @@ onUnmounted(() => {
   background: #ffffff;
   border: 2px solid rgba(0, 0, 0, 0.1);
   border-radius: 12px;
-  padding: 0 0.875rem;
+  padding: 0 1rem;
   transition: all 0.3s ease;
 }
 
@@ -746,7 +738,7 @@ onUnmounted(() => {
   flex: 1;
   border: none;
   outline: none;
-  padding: 0.75rem 0.625rem;
+  padding: 0.875rem 0.75rem;
   font-size: 0.875rem;
   font-weight: 500;
   color: #1a1a1a;
@@ -871,16 +863,28 @@ onUnmounted(() => {
   cursor: pointer;
 }
 
+/* Table Content - scrollable area */
+.table-content {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
 /* Word Table */
 .word-table {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  flex: 1;
+  min-height: 0;
 }
 
 .table-scroll {
   overflow-x: auto;
+  overflow-y: auto;
   border-radius: 16px;
+  flex: 1;
+  min-height: 0;
 }
 
 .table {
@@ -891,6 +895,9 @@ onUnmounted(() => {
 
 .table-head {
   background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  position: sticky;
+  top: 0;
+  z-index: 10;
 }
 
 .th {
@@ -1291,6 +1298,7 @@ onUnmounted(() => {
   justify-content: center;
   gap: 1rem;
   padding: 1rem 0;
+  flex-shrink: 0;
 }
 
 .pagination-btn {

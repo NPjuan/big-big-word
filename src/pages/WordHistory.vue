@@ -80,9 +80,11 @@ onUnmounted(() => {
 <style scoped>
 /* ===== Base Styles ===== */
 .word-history-page {
-  min-height: 100vh;
+  height: 100vh;
   position: relative;
-  overflow-x: hidden;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 /* ===== Gradient Background ===== */
@@ -172,8 +174,14 @@ onUnmounted(() => {
   position: relative;
   z-index: 1;
   max-width: 1600px;
-  margin: 100px auto;
-  padding: 100px 1.5rem 1.5rem 1.5rem;
+  margin: 0 auto;
+  padding: 86px 2rem 2rem 2rem;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 /* ===== Glass Card Effect ===== */
@@ -210,6 +218,16 @@ onUnmounted(() => {
 /* ===== Table Section ===== */
 .display-section {
   animation-delay: 0.1s;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.display-section > :deep(*) {
+  flex: 1;
+  min-height: 0;
 }
 
 /* ===== View Transition ===== */
@@ -273,20 +291,20 @@ onUnmounted(() => {
 @media (max-width: 1680px) {
   .content-wrapper {
     max-width: 1440px;
-    padding: 0 1.25rem 1.25rem 1.25rem;
+    padding: 86px 1.75rem 1.75rem 1.75rem;
   }
 }
 
 @media (max-width: 1440px) {
   .content-wrapper {
     max-width: 1200px;
-    padding: 0 1rem 1rem 1rem;
+    padding: 84px 1.5rem 1.5rem 1.5rem;
   }
 }
 
 @media (max-width: 768px) {
   .content-wrapper {
-    padding: 0 1rem 1rem 1rem;
+    padding: 76px 1.25rem 1.25rem 1.25rem;
   }
 
   .scroll-top-btn {
@@ -304,7 +322,7 @@ onUnmounted(() => {
 
 @media (max-width: 480px) {
   .content-wrapper {
-    padding: 0 0.75rem 0.75rem 0.75rem;
+    padding: 74px 1rem 1rem 1rem;
   }
 
   .glass-card {

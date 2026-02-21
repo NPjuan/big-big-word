@@ -1,9 +1,27 @@
 <template>
   <div class="compact-input-container">
+    <!-- Loading Progress Tips (above input) -->
+    <transition name="fade">
+      <div v-if="wordStore.loadingStep" class="progress-tip">
+        <div class="progress-dot-container">
+          <span class="progress-dot"></span>
+          <span class="progress-dot"></span>
+          <span class="progress-dot"></span>
+        </div>
+        <span class="progress-text">{{ wordStore.loadingStep }}</span>
+      </div>
+    </transition>
+
     <!-- Input Wrapper -->
     <div
+      ref="inputWrapperRef"
       class="input-wrapper"
-      :class="{ 'input-focused': isFocused, 'input-error': !!errorMessage }"
+      :class="{
+        'input-focused': isFocused,
+        'input-error': !!errorMessage,
+        'input-shake': isShaking,
+        'input-success-flash': isSuccessFlash,
+      }"
     >
       <div class="input-icon">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
@@ -94,6 +112,23 @@ const isFocused = ref(false)
 const isLoading = ref(false)
 const errorMessage = ref<string | null>(null)
 const successMessage = ref('')
+const isShaking = ref(false)
+const isSuccessFlash = ref(false)
+const inputWrapperRef = ref<HTMLDivElement | null>(null)
+
+const triggerShake = () => {
+  isShaking.value = true
+  setTimeout(() => {
+    isShaking.value = false
+  }, 600)
+}
+
+const triggerSuccessFlash = () => {
+  isSuccessFlash.value = true
+  setTimeout(() => {
+    isSuccessFlash.value = false
+  }, 800)
+}
 
 const isValid = computed(() => {
   return inputWord.value.trim().length > 0 && /^[a-zA-Z\s-]+$/.test(inputWord.value)
@@ -116,12 +151,14 @@ const handleSubmit = async () => {
     await wordStore.addWord(inputWord.value.trim().toLowerCase())
     successMessage.value = `"${inputWord.value}" added! 🎉`
     inputWord.value = ''
+    triggerSuccessFlash()
 
     setTimeout(() => {
       successMessage.value = ''
     }, 2000)
   } catch (err) {
     errorMessage.value = err instanceof Error ? err.message : 'Failed to add word'
+    triggerShake()
     setTimeout(() => {
       errorMessage.value = null
     }, 3000)
@@ -186,6 +223,66 @@ const handleKeyDown = (event: KeyboardEvent) => {
   box-shadow:
     0 4px 20px rgba(239, 68, 68, 0.2),
     inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+/* ===== Shake Animation (Error) ===== */
+.input-shake {
+  animation: shake 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+}
+
+@keyframes shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  10% {
+    transform: translateX(-6px);
+  }
+  20% {
+    transform: translateX(5px);
+  }
+  30% {
+    transform: translateX(-4px);
+  }
+  40% {
+    transform: translateX(3px);
+  }
+  50% {
+    transform: translateX(-2px);
+  }
+  60% {
+    transform: translateX(1px);
+  }
+  70% {
+    transform: translateX(0);
+  }
+}
+
+/* ===== Success Flash Animation ===== */
+.input-success-flash {
+  animation: successFlash 0.7s ease-out both;
+}
+
+@keyframes successFlash {
+  0% {
+    border-color: rgba(13, 148, 136, 0.2);
+    box-shadow:
+      0 4px 20px rgba(0, 0, 0, 0.08),
+      inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  }
+  30% {
+    border-color: #16a34a;
+    box-shadow:
+      0 0 0 4px rgba(34, 197, 94, 0.2),
+      0 4px 20px rgba(34, 197, 94, 0.15),
+      inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  }
+  100% {
+    border-color: rgba(13, 148, 136, 0.2);
+    box-shadow:
+      0 4px 20px rgba(0, 0, 0, 0.08),
+      inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  }
 }
 
 /* ===== Input Icon ===== */
@@ -331,6 +428,7 @@ const handleKeyDown = (event: KeyboardEvent) => {
 
 /* ===== Tips Row ===== */
 .tips-row {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 1rem;
@@ -370,11 +468,84 @@ const handleKeyDown = (event: KeyboardEvent) => {
 
 .error-tip,
 .success-tip {
-  margin-left: auto;
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
   font-size: 0.8125rem;
   font-weight: 600;
   padding: 0.25rem 0.75rem;
   border-radius: 6px;
+  white-space: nowrap;
+}
+
+/* ===== Progress Tips ===== */
+.progress-tip {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.875rem;
+  background: linear-gradient(135deg, rgba(13, 148, 136, 0.06), rgba(45, 212, 191, 0.06));
+  border: 1px solid rgba(13, 148, 136, 0.15);
+  border-radius: 10px;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: #0d9488;
+  animation: tipSlideIn 0.3s ease-out;
+}
+
+@keyframes tipSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.progress-dot-container {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  flex-shrink: 0;
+}
+
+.progress-dot {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: #0d9488;
+  animation: dotPulse 1.4s ease-in-out infinite;
+}
+
+.progress-dot:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.progress-dot:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes dotPulse {
+  0%,
+  80%,
+  100% {
+    opacity: 0.3;
+    transform: scale(0.8);
+  }
+  40% {
+    opacity: 1;
+    transform: scale(1.2);
+  }
+}
+
+.progress-text {
+  line-height: 1.4;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .error-tip {
@@ -396,7 +567,21 @@ const handleKeyDown = (event: KeyboardEvent) => {
 .fade-enter-from,
 .fade-leave-to {
   opacity: 0;
-  transform: translateY(-4px);
+  transform: translateY(4px);
+}
+
+/* Override for absolutely-positioned tips inside tips-row to avoid transform conflict */
+.tips-row .fade-enter-from,
+.tips-row .fade-leave-to {
+  opacity: 0;
+  transform: translateY(-50%) scale(0.95);
+}
+
+.tips-row .fade-enter-active,
+.tips-row .fade-leave-active {
+  transition:
+    opacity 0.2s ease,
+    transform 0.2s ease;
 }
 
 /* ===== Responsive Design ===== */
@@ -476,7 +661,11 @@ const handleKeyDown = (event: KeyboardEvent) => {
 
   .error-tip,
   .success-tip {
-    width: 100%;
+    position: absolute;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: auto;
     text-align: center;
     font-size: 0.75rem;
   }

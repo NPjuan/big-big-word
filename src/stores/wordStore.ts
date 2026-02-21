@@ -9,6 +9,7 @@ export const useWordStore = defineStore('word', () => {
   const words = ref<Word[]>([])
   const isLoading = ref(false)
   const error = ref<string | null>(null)
+  const loadingStep = ref<string>('') // Progress step hint for UI
 
   // Computed
   const wordCount = computed(() => words.value.length)
@@ -184,18 +185,31 @@ export const useWordStore = defineStore('word', () => {
     }
 
     isLoading.value = true
+    loadingStep.value = ''
     error.value = null
 
     try {
-      // Fetch word data from dictionary API
+      // Step 1: Fetch word data from dictionary API
+      loadingStep.value = '🔍 Looking up dictionary...'
       const wordData = await fetchWordData(wordText)
 
       if (!wordData) {
         throw new Error('Word not found in dictionary')
       }
 
-      // Generate Chinese meanings (placeholder for now)
-      const chineseMeanings = await generateChineseMeanings(wordData.englishMeanings)
+      // Step 2: Show what we found so far
+      loadingStep.value = `📖 Found "${wordData.word}" — ${wordData.partOfSpeech.join(', ')}${wordData.phonetic ? '  ' + wordData.phonetic : ''}`
+      // Small pause to let user see the intermediate result
+      await new Promise((resolve) => setTimeout(resolve, 400))
+
+      // Step 3: Generate Chinese meanings
+      loadingStep.value = '🀄 Translating to Chinese...'
+      const chineseMeanings = await generateChineseMeanings(
+        wordData.englishMeanings,
+        (progress: string) => {
+          loadingStep.value = progress
+        },
+      )
 
       // Create word object with API data
       const now = new Date()
@@ -225,13 +239,18 @@ export const useWordStore = defineStore('word', () => {
         consecutiveCorrect: 0,
       }
 
+      // Step 4: Almost done
+      loadingStep.value = '✨ Saving word...'
+
       // Add to store
       words.value.unshift(newWord)
       saveWords()
 
+      loadingStep.value = ''
       return newWord
     } catch (err) {
       error.value = err instanceof Error ? err.message : 'Failed to add word'
+      loadingStep.value = ''
       throw err
     } finally {
       isLoading.value = false
@@ -310,6 +329,7 @@ export const useWordStore = defineStore('word', () => {
   return {
     words,
     isLoading,
+    loadingStep,
     error,
     wordCount,
     masteredWords,

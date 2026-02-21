@@ -41,7 +41,15 @@
             placeholder="Search words..."
             aria-label="Search words"
           />
-          <button v-if="search" class="search-clear" @click="search = ''" aria-label="Clear search">
+          <button
+            v-if="search"
+            class="search-clear"
+            @click="search = ''"
+            aria-label="Clear search"
+            tabindex="0"
+            @keydown.enter="search = ''"
+            @keydown.space.prevent="search = ''"
+          >
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
               <path
                 d="M6 18L18 6M6 6l12 12"
@@ -58,7 +66,7 @@
           <button
             class="toggle-btn"
             :class="{ active: viewMode === 'grid' }"
-            @click="viewMode = 'grid'"
+            @click="handleViewChange('grid')"
             aria-label="Grid view"
           >
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
@@ -71,7 +79,7 @@
           <button
             class="toggle-btn"
             :class="{ active: viewMode === 'table' }"
-            @click="viewMode = 'table'"
+            @click="handleViewChange('table')"
             aria-label="Table view"
           >
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
@@ -320,17 +328,20 @@ const emit = defineEmits<{
   (e: 'changeView', mode: 'grid' | 'table'): void
 }>()
 
-// Watch viewMode and emit event
-import { watch } from 'vue'
-watch(viewMode, (newMode) => {
-  emit('changeView', newMode)
-})
+const handleViewChange = (mode: 'grid' | 'table') => {
+  viewMode.value = mode
+  emit('changeView', mode)
+}
 </script>
 
 <style scoped>
 /* Container */
 .word-grid-container {
   padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
 }
 
 /* Header */
@@ -341,6 +352,7 @@ watch(viewMode, (newMode) => {
   margin-bottom: 2rem;
   gap: 1.5rem;
   flex-wrap: wrap;
+  flex-shrink: 0;
 }
 
 .header-left {
@@ -576,6 +588,9 @@ watch(viewMode, (newMode) => {
   display: flex;
   flex-direction: column;
   gap: 2rem;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
 }
 
 /* Letter Section */

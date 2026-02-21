@@ -237,6 +237,7 @@ const translateBatch = async (texts: string[], delayMs = 300): Promise<string[]>
  */
 export const generateChineseMeanings = async (
   englishMeanings: WordData['englishMeanings'],
+  onProgress?: (step: string) => void,
 ): Promise<
   {
     partOfSpeech: string
@@ -246,8 +247,16 @@ export const generateChineseMeanings = async (
 > => {
   try {
     const chineseMeanings = []
+    const total = englishMeanings.length
 
-    for (const meaning of englishMeanings) {
+    for (let i = 0; i < total; i++) {
+      const meaning = englishMeanings[i]
+
+      // Notify progress for each part of speech
+      if (onProgress) {
+        onProgress(`🀄 Translating ${meaning.partOfSpeech} (${i + 1}/${total})...`)
+      }
+
       // Collect all texts to translate
       const definitionsToTranslate = meaning.definitions.slice(0, 3) // Limit to 3 definitions
       const examplesToTranslate = meaning.examples.slice(0, 2) // Limit to 2 examples
