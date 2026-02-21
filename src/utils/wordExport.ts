@@ -134,3 +134,94 @@ export const exportToJSON = (words: Word[]): void => {
   const filename = generateExportFilename('json')
   downloadFile(jsonContent, filename, 'application/json;charset=utf-8;')
 }
+
+// ============================
+// Import Utilities
+// ============================
+
+/**
+ * Validate that a parsed object has the minimum required fields to be a Word.
+ * Missing optional / SRS fields are backfilled with sensible defaults.
+ */
+const isValidWordObject = (obj: any): boolean => {
+  return (
+    typeof obj === 'object' &&
+    obj !== null &&
+    typeof obj.word === 'string' &&
+    obj.word.trim().length > 0
+  )
+}
+
+/**
+ * Normalise an imported object into a full Word, filling in any missing fields.
+ */
+const normaliseImportedWord = (raw: any): Word => {
+  const now = new Date().toISOString()
+  return {
+    id: typeof raw.id === 'string' && raw.id ? raw.id : crypto.randomUUID(),
+    word: String(raw.word).trim().toLowerCase(),
+    phonetic: raw.phonetic ?? '',
+    audioUrl: raw.audioUrl ?? undefined,
+    partOfSpeech: Array.isArray(raw.partOfSpeech) ? raw.partOfSpeech : [],
+    chineseMeaning: Array.isArray(raw.chineseMeaning) ? raw.chineseMeaning : [],
+    englishMeaning: Array.isArray(raw.englishMeaning) ? raw.englishMeaning : [],
+    etymology: raw.etymology ?? {
+      roots: [],
+      origin: '',
+      evolution: '',
+      relatedWords: [],
+      mnemonic: '',
+      generatedAt: now,
+    },
+    createdAt: raw.createdAt ?? now,
+    lastReviewed: raw.lastReviewed ?? undefined,
+    reviewCount: typeof raw.reviewCount === 'number' ? raw.reviewCount : 0,
+    mastery: typeof raw.mastery === 'number' ? raw.mastery : 0,
+    nextReviewDate: raw.nextReviewDate ?? now,
+    reviewInterval: typeof raw.reviewInterval === 'number' ? raw.reviewInterval : 0,
+    easeFactor: typeof raw.easeFactor === 'number' ? raw.easeFactor : 2.5,
+    consecutiveCorrect: typeof raw.consecutiveCorrect === 'number' ? raw.consecutiveCorrect : 0,
+  }
+}
+
+/**
+ * Parse a JSON string into an array of validated Word objects.
+ * Returns { words, errors } where errors contains human-readable messages.
+ */
+export const parseImportJSON = (jsonString: string): { words: Word[]; errors: string[] } => {
+  const errors: string[] = []
+
+  let parsed: unknown
+  try {
+    parsed = JSON.parse(jsonString)
+  } catch {
+    return { words: [], errors: ['Invalid JSON format. Please check the file content.'] }
+  }
+
+  if (!Array.isArray(parsed)) {
+    return { words: [], errors: ['Expected a JSON array of word objects.'] }
+  }
+
+  const words: Word[] = []
+  parsed.forEach((item, index) => {
+    if (isValidWordObject(item)) {
+      words.push(normaliseImportedWord(item))
+    } else {
+      errors.push(`Item at index ${index} is missing the required "word" field — skipped.`)
+    }
+  })
+
+  return { words, errors }
+}
+
+/**
+ * Read a File (from <input type="file">) and return its text content.
+ */
+export const readFileAsText = (file: File): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = () => resolve(reader.result as string)
+    reader.onerror = () => reject(new Error('Failed to read file'))
+    reader.readAsText(file)
+  })
+}

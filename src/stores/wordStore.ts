@@ -91,6 +91,66 @@ export const useWordStore = defineStore('word', () => {
   }
 
   // Actions
+
+  /**
+   * Import words and merge with existing collection.
+   * Conflict resolution: match by `word` (case-insensitive). If a word already
+   * exists, keep whichever version was modified more recently (compare
+   * lastReviewed → createdAt as fallback).
+   * Returns { added, updated, skipped } counts.
+   */
+  const importWords = (incoming: Word[]): { added: number; updated: number; skipped: number } => {
+    let added = 0
+    let updated = 0
+    let skipped = 0
+
+    // Build a lookup map of existing words by normalised word text
+    const existingMap = new Map<string, Word>()
+    for (const w of words.value) {
+      existingMap.set(w.word.toLowerCase(), w)
+    }
+
+    const getLatestTimestamp = (w: Word): number => {
+      const reviewed = w.lastReviewed ? new Date(w.lastReviewed).getTime() : 0
+      const created = new Date(w.createdAt).getTime()
+      return Math.max(reviewed, created)
+    }
+
+    for (const incoming_word of incoming) {
+      const key = incoming_word.word.toLowerCase()
+      const existing = existingMap.get(key)
+
+      if (!existing) {
+        // New word — assign a fresh ID and add
+        const newWord = { ...incoming_word, id: crypto.randomUUID() }
+        words.value.push(ensureSRSFields(newWord))
+        existingMap.set(key, newWord)
+        added++
+      } else {
+        // Conflict — keep the newer version
+        const existingTime = getLatestTimestamp(existing)
+        const incomingTime = getLatestTimestamp(incoming_word)
+
+        if (incomingTime > existingTime) {
+          // Incoming is newer — update existing in-place, preserve the original ID
+          const idx = words.value.findIndex((w) => w.id === existing.id)
+          if (idx !== -1) {
+            words.value[idx] = ensureSRSFields({ ...incoming_word, id: existing.id })
+            updated++
+          } else {
+            skipped++
+          }
+        } else {
+          // Existing is same or newer — skip
+          skipped++
+        }
+      }
+    }
+
+    saveWords()
+    return { added, updated, skipped }
+  }
+
   const loadWords = () => {
     try {
       const stored = localStorage.getItem('big-big-words')
@@ -261,6 +321,7 @@ export const useWordStore = defineStore('word', () => {
     incrementReview,
     updateMasteryRight,
     updateMasteryLeft,
+    importWords,
     loadWords,
     saveWords,
   }

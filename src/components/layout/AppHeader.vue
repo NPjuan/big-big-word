@@ -48,9 +48,9 @@
       </nav>
 
       <!-- Statistics & Export Section -->
-      <div v-if="wordStore.wordCount > 0" class="header-actions">
+      <div class="header-actions">
         <!-- Statistics -->
-        <div class="header-stats">
+        <div v-if="wordStore.wordCount > 0" class="header-stats">
           <div class="stat-card stat-primary">
             <div class="stat-icon-wrapper">
               <svg class="stat-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
@@ -101,68 +101,103 @@
               <div class="stat-label">Avg. Mastery</div>
             </div>
           </div>
+        </div>
 
-          <!-- Export Dropdown -->
-          <div class="export-dropdown">
-            <button
-              class="export-btn"
-              @click="toggleExportMenu"
-              :disabled="isExporting"
-              aria-label="Export words"
-              tabindex="0"
+        <!-- Import Button -->
+        <div class="import-wrapper">
+          <button
+            class="import-btn"
+            @click="handleImportClick"
+            :disabled="isImporting"
+            aria-label="Import words"
+            tabindex="0"
+          >
+            <svg
+              v-if="!isImporting"
+              class="btn-icon"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
             >
-              <svg
-                v-if="!isExporting"
-                class="btn-icon"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-              >
-                <path
-                  d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                />
-              </svg>
-              <div v-else class="btn-spinner"></div>
-              <span>Export</span>
-            </button>
+              <path
+                d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+            <div v-else class="btn-spinner"></div>
+            <span>Import</span>
+          </button>
+          <input
+            ref="fileInputRef"
+            type="file"
+            accept=".json"
+            class="hidden-file-input"
+            @change="handleFileSelected"
+          />
+        </div>
 
-            <transition name="dropdown-fade">
-              <div v-if="showExportMenu" class="export-menu">
-                <button class="menu-item" @click="handleExportCSV">
-                  <svg class="menu-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                    <path
-                      d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                      stroke-width="2"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                    />
-                  </svg>
-                  <div class="menu-content">
-                    <div class="menu-title">Export as CSV</div>
-                    <div class="menu-subtitle">For spreadsheet apps</div>
-                  </div>
-                </button>
+        <!-- Export Dropdown -->
+        <div v-if="wordStore.wordCount > 0" class="export-dropdown">
+          <button
+            class="export-btn"
+            @click="toggleExportMenu"
+            :disabled="isExporting"
+            aria-label="Export words"
+            tabindex="0"
+          >
+            <svg
+              v-if="!isExporting"
+              class="btn-icon"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+            >
+              <path
+                d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+            <div v-else class="btn-spinner"></div>
+            <span>Export</span>
+          </button>
 
-                <button class="menu-item" @click="handleExportJSON">
-                  <svg class="menu-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                    <path
-                      d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"
-                      stroke-width="2"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                    />
-                  </svg>
-                  <div class="menu-content">
-                    <div class="menu-title">Export as JSON</div>
-                    <div class="menu-subtitle">For backup & programmatic use</div>
-                  </div>
-                </button>
-              </div>
-            </transition>
-          </div>
+          <transition name="dropdown-fade">
+            <div v-if="showExportMenu" class="export-menu">
+              <button class="menu-item" @click="handleExportCSV">
+                <svg class="menu-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                  <path
+                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                </svg>
+                <div class="menu-content">
+                  <div class="menu-title">Export as CSV</div>
+                  <div class="menu-subtitle">For spreadsheet apps</div>
+                </div>
+              </button>
+
+              <button class="menu-item" @click="handleExportJSON">
+                <svg class="menu-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                  <path
+                    d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                </svg>
+                <div class="menu-content">
+                  <div class="menu-title">Export as JSON</div>
+                  <div class="menu-subtitle">For backup & programmatic use</div>
+                </div>
+              </button>
+            </div>
+          </transition>
         </div>
       </div>
 
@@ -183,6 +218,32 @@
           </span>
         </div>
       </transition>
+
+      <!-- Import Result Toast -->
+      <transition name="toast-fade">
+        <div
+          v-if="showImportToast"
+          :class="['toast', importToastType === 'success' ? 'toast-success' : 'toast-error']"
+        >
+          <svg class="toast-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <path
+              v-if="importToastType === 'success'"
+              d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+            <path
+              v-else
+              d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+          </svg>
+          <span>{{ importToastMessage }}</span>
+        </div>
+      </transition>
     </div>
   </header>
 </template>
@@ -190,13 +251,20 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useWordStore } from '@/stores/wordStore'
-import { exportToCSV, exportToJSON } from '@/utils/wordExport'
+import { exportToCSV, exportToJSON, parseImportJSON, readFileAsText } from '@/utils/wordExport'
 
 const wordStore = useWordStore()
 const showExportMenu = ref(false)
 const isExporting = ref(false)
 const showExportSuccess = ref(false)
 const exportFormat = ref<'csv' | 'json'>('csv')
+
+// Import state
+const fileInputRef = ref<HTMLInputElement | null>(null)
+const isImporting = ref(false)
+const showImportToast = ref(false)
+const importToastMessage = ref('')
+const importToastType = ref<'success' | 'error'>('success')
 
 const masteryPercentage = computed(() => {
   if (wordStore.wordCount === 0) return 0
@@ -246,6 +314,60 @@ const handleExportJSON = async () => {
   } finally {
     isExporting.value = false
   }
+}
+
+// ---- Import handlers ----
+const handleImportClick = () => {
+  fileInputRef.value?.click()
+}
+
+const handleFileSelected = async (event: Event) => {
+  const input = event.target as HTMLInputElement
+  const file = input.files?.[0]
+  if (!file) return
+
+  isImporting.value = true
+  try {
+    const text = await readFileAsText(file)
+    const { words: parsedWords, errors } = parseImportJSON(text)
+
+    if (parsedWords.length === 0 && errors.length > 0) {
+      showImportToastFn(errors[0], 'error')
+      return
+    }
+
+    if (parsedWords.length === 0) {
+      showImportToastFn('The file contains no words to import.', 'error')
+      return
+    }
+
+    const result = wordStore.importWords(parsedWords)
+
+    const parts: string[] = []
+    if (result.added > 0) parts.push(`${result.added} added`)
+    if (result.updated > 0) parts.push(`${result.updated} updated`)
+    if (result.skipped > 0) parts.push(`${result.skipped} unchanged`)
+
+    const summary = parts.join(', ')
+    const errorNote = errors.length > 0 ? ` (${errors.length} items skipped due to errors)` : ''
+    showImportToastFn(`Import complete: ${summary}${errorNote}`, 'success')
+  } catch (err) {
+    console.error('Import failed:', err)
+    showImportToastFn('Import failed. Please check the file format.', 'error')
+  } finally {
+    isImporting.value = false
+    // Reset file input so the same file can be re-imported
+    input.value = ''
+  }
+}
+
+const showImportToastFn = (message: string, type: 'success' | 'error') => {
+  importToastMessage.value = message
+  importToastType.value = type
+  showImportToast.value = true
+  setTimeout(() => {
+    showImportToast.value = false
+  }, 4000)
 }
 
 const handleClickOutside = (event: MouseEvent) => {
@@ -510,6 +632,48 @@ onUnmounted(() => {
   letter-spacing: 0.03em;
 }
 
+/* Import Button */
+.import-wrapper {
+  position: relative;
+}
+
+.import-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.875rem;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: #0d9488;
+  background: rgba(13, 148, 136, 0.08);
+  border: 1.5px solid rgba(13, 148, 136, 0.2);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.import-btn:hover:not(:disabled) {
+  background: rgba(13, 148, 136, 0.14);
+  border-color: rgba(13, 148, 136, 0.35);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(13, 148, 136, 0.15);
+}
+
+.import-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.hidden-file-input {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+  opacity: 0;
+  pointer-events: none;
+}
+
 /* Export Dropdown */
 .export-dropdown {
   position: relative;
@@ -644,6 +808,12 @@ onUnmounted(() => {
   backdrop-filter: blur(10px);
 }
 
+.toast-error {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.95), rgba(220, 38, 38, 0.95));
+  color: white;
+  backdrop-filter: blur(10px);
+}
+
 .toast-icon {
   width: 20px;
   height: 20px;
@@ -693,8 +863,12 @@ onUnmounted(() => {
     justify-content: center;
   }
 
-  .header-actions {
+  .header-stats {
     display: none;
+  }
+
+  .header-actions {
+    gap: 0.5rem;
   }
 }
 
