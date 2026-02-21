@@ -24,6 +24,14 @@ const router = createRouter({
           },
         },
         {
+          path: 'review',
+          name: 'review',
+          component: () => import('@/pages/ReviewSession.vue'),
+          meta: {
+            title: 'Review',
+          },
+        },
+        {
           path: 'word/:id',
           name: 'word-detail',
           component: () => import('@/pages/WordDetail.vue'),

@@ -4,7 +4,25 @@
   </v-app>
 </template>
 
-<script setup lang="ts"></script>
+<script setup lang="ts">
+import { onMounted, onUnmounted } from 'vue'
+import { useWordStore } from '@/stores/wordStore'
+
+const wordStore = useWordStore()
+
+// Flush any debounced save before the user leaves the page
+const handleBeforeUnload = () => {
+  wordStore.saveWordsImmediate()
+}
+
+onMounted(() => {
+  window.addEventListener('beforeunload', handleBeforeUnload)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('beforeunload', handleBeforeUnload)
+})
+</script>
 
 <style>
 /* Global Styles */

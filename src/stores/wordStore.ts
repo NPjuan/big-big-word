@@ -3,6 +3,12 @@ import { ref, computed } from 'vue'
 import type { Word } from '@/types/word.types'
 import { fetchWordData, generateChineseMeanings } from '@/services/dictionaryApi'
 import { defaultWords } from '@/data/defaultWords'
+import { normaliseWord } from '@/utils/normaliseWord'
+
+// Storage constants
+const STORAGE_KEY = 'big-big-words'
+const SCHEMA_VERSION_KEY = 'big-big-words-schema-version'
+const CURRENT_SCHEMA_VERSION = 1
 
 export const useWordStore = defineStore('word', () => {
   // State
@@ -52,53 +58,15 @@ export const useWordStore = defineStore('word', () => {
     })
   })
 
+  // Words that are currently due for review
+  const dueWords = computed(() => {
+    const now = Date.now()
+    return words.value.filter((w) => new Date(w.nextReviewDate).getTime() <= now)
+  })
+
+  const dueWordsCount = computed(() => dueWords.value.length)
+
   // --- SRS helpers ---
-
-  // Ensure a word has all SRS fields and correct types (backward compat for old data)
-  const ensureSRSFields = (w: any): Word => {
-    const now = new Date().toISOString()
-
-    // Normalise partOfSpeech: old data may store it as a plain string
-    let partOfSpeech: string[]
-    if (Array.isArray(w.partOfSpeech)) {
-      partOfSpeech = w.partOfSpeech
-    } else if (typeof w.partOfSpeech === 'string' && w.partOfSpeech.trim().length > 0) {
-      partOfSpeech = [w.partOfSpeech.trim()]
-    } else {
-      partOfSpeech = []
-    }
-
-    // Deep-normalise englishMeaning items (ensure synonyms/antonyms/examples exist)
-    const englishMeaning = Array.isArray(w.englishMeaning)
-      ? w.englishMeaning.map((m: any) => ({
-          partOfSpeech: m.partOfSpeech ?? '',
-          definitions: Array.isArray(m.definitions) ? m.definitions : [],
-          examples: Array.isArray(m.examples) ? m.examples : [],
-          synonyms: Array.isArray(m.synonyms) ? m.synonyms : [],
-          antonyms: Array.isArray(m.antonyms) ? m.antonyms : [],
-        }))
-      : []
-
-    // Deep-normalise chineseMeaning items (ensure examples exist)
-    const chineseMeaning = Array.isArray(w.chineseMeaning)
-      ? w.chineseMeaning.map((m: any) => ({
-          partOfSpeech: m.partOfSpeech ?? '',
-          definitions: Array.isArray(m.definitions) ? m.definitions : [],
-          examples: Array.isArray(m.examples) ? m.examples : [],
-        }))
-      : []
-
-    return {
-      ...w,
-      partOfSpeech,
-      englishMeaning,
-      chineseMeaning,
-      nextReviewDate: w.nextReviewDate ?? now,
-      reviewInterval: w.reviewInterval ?? 0,
-      easeFactor: w.easeFactor ?? 2.5,
-      consecutiveCorrect: w.consecutiveCorrect ?? 0,
-    }
-  }
 
   // SM-2 algorithm: calculate next review interval and ease factor
   // quality: 0-5, where 0=total blackout, 5=perfect recall
@@ -158,7 +126,7 @@ export const useWordStore = defineStore('word', () => {
       if (!existing) {
         // New word — assign a fresh ID and add
         const newWord = { ...incoming_word, id: crypto.randomUUID() }
-        words.value.push(ensureSRSFields(newWord))
+        words.value.push(normaliseWord(newWord))
         existingMap.set(key, newWord)
         added++
       } else {
@@ -170,7 +138,7 @@ export const useWordStore = defineStore('word', () => {
           // Incoming is newer — update existing in-place, preserve the original ID
           const idx = words.value.findIndex((w) => w.id === existing.id)
           if (idx !== -1) {
-            words.value[idx] = ensureSRSFields({ ...incoming_word, id: existing.id })
+            words.value[idx] = normaliseWord({ ...incoming_word, id: existing.id })
             updated++
           } else {
             skipped++
@@ -188,13 +156,26 @@ export const useWordStore = defineStore('word', () => {
 
   const loadWords = () => {
     try {
-      const stored = localStorage.getItem('big-big-words')
+      const stored = localStorage.getItem(STORAGE_KEY)
+      const storedVersion = Number(localStorage.getItem(SCHEMA_VERSION_KEY) || '0')
+
       if (stored) {
-        // Migrate old data that lacks SRS fields
-        words.value = (JSON.parse(stored) as any[]).map(ensureSRSFields)
+        let parsed = JSON.parse(stored) as any[]
+
+        // Run migrations when schema version is outdated
+        if (storedVersion < CURRENT_SCHEMA_VERSION) {
+          console.info(
+            `[wordStore] Migrating data from schema v${storedVersion} → v${CURRENT_SCHEMA_VERSION}`,
+          )
+          parsed = parsed.map(normaliseWord)
+        }
+
+        words.value = parsed.map(normaliseWord)
+        // Persist the latest schema version
+        localStorage.setItem(SCHEMA_VERSION_KEY, String(CURRENT_SCHEMA_VERSION))
       } else {
         // Load default words if no saved words exist
-        words.value = defaultWords.map(ensureSRSFields)
+        words.value = defaultWords.map(normaliseWord)
         saveWords() // Save default words to localStorage
       }
     } catch (err) {
@@ -203,12 +184,49 @@ export const useWordStore = defineStore('word', () => {
     }
   }
 
+  // Debounced save — coalesce rapid mutations into a single write
+  let saveTimer: ReturnType<typeof setTimeout> | null = null
+
   const saveWords = () => {
+    if (saveTimer) clearTimeout(saveTimer)
+    saveTimer = setTimeout(() => {
+      try {
+        const data = JSON.stringify(words.value)
+        localStorage.setItem(STORAGE_KEY, data)
+        localStorage.setItem(SCHEMA_VERSION_KEY, String(CURRENT_SCHEMA_VERSION))
+      } catch (err: any) {
+        // Detect quota exceeded
+        if (err?.name === 'QuotaExceededError' || err?.code === 22) {
+          console.error(
+            '[wordStore] localStorage quota exceeded! Please export and backup your data.',
+          )
+          error.value = 'Storage is full. Please export your words to free up space.'
+        } else {
+          console.error('Failed to save words:', err)
+          error.value = 'Failed to save words'
+        }
+      }
+    }, 300)
+  }
+
+  /** Force an immediate synchronous save (used before page unload, etc.) */
+  const saveWordsImmediate = () => {
+    if (saveTimer) {
+      clearTimeout(saveTimer)
+      saveTimer = null
+    }
     try {
-      localStorage.setItem('big-big-words', JSON.stringify(words.value))
-    } catch (err) {
-      console.error('Failed to save words:', err)
-      error.value = 'Failed to save words'
+      const data = JSON.stringify(words.value)
+      localStorage.setItem(STORAGE_KEY, data)
+      localStorage.setItem(SCHEMA_VERSION_KEY, String(CURRENT_SCHEMA_VERSION))
+    } catch (err: any) {
+      if (err?.name === 'QuotaExceededError' || err?.code === 22) {
+        console.error('[wordStore] localStorage quota exceeded!')
+        error.value = 'Storage is full. Please export your words to free up space.'
+      } else {
+        console.error('Failed to save words:', err)
+        error.value = 'Failed to save words'
+      }
     }
   }
 
@@ -357,6 +375,38 @@ export const useWordStore = defineStore('word', () => {
     }
   }
 
+  // Generic review with quality score (0-5) for quiz modes
+  // 0 = total blackout, 1 = wrong, 2 = wrong but recognised, 3 = correct with difficulty, 4 = correct, 5 = perfect
+  const reviewWithQuality = (id: string, quality: number) => {
+    const word = words.value.find((w) => w.id === id)
+    if (!word) return
+
+    const now = new Date()
+    word.reviewCount++
+    word.lastReviewed = now.toISOString()
+
+    // Update mastery based on quality
+    if (quality >= 4) {
+      word.mastery = Math.min(100, word.mastery + 10)
+      word.consecutiveCorrect++
+    } else if (quality === 3) {
+      word.mastery = Math.min(100, word.mastery + 5)
+      word.consecutiveCorrect++
+    } else {
+      word.mastery = Math.max(0, word.mastery - 5)
+      word.consecutiveCorrect = 0
+    }
+
+    const { interval, easeFactor } = calculateSM2(word.reviewInterval, word.easeFactor, quality)
+    word.reviewInterval = interval
+    word.easeFactor = easeFactor
+    const nextDate = new Date(now)
+    nextDate.setDate(nextDate.getDate() + interval)
+    word.nextReviewDate = nextDate.toISOString()
+
+    saveWords()
+  }
+
   // Initialize
   loadWords()
 
@@ -369,14 +419,18 @@ export const useWordStore = defineStore('word', () => {
     masteredWords,
     recentWords,
     wordsByReviewPriority,
+    dueWords,
+    dueWordsCount,
     addWord,
     deleteWord,
     updateWord,
     incrementReview,
     updateMasteryRight,
     updateMasteryLeft,
+    reviewWithQuality,
     importWords,
     loadWords,
     saveWords,
+    saveWordsImmediate,
   }
 })

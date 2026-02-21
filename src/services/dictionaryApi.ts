@@ -207,23 +207,80 @@ export const translateToChineseSimple = async (text: string): Promise<string> =>
 }
 
 /**
- * Translate multiple texts with rate limiting
- * Adds delay between requests to avoid rate limiting
+ * Internal separator used to pack / unpack multiple texts in a single API call.
+ * Chosen because it is extremely unlikely to appear inside dictionary definitions.
  */
-const translateBatch = async (texts: string[], delayMs = 300): Promise<string[]> => {
-  const results: string[] = []
+const BATCH_SEPARATOR = ' ||| '
 
-  for (const text of texts) {
-    if (!text || text.trim().length === 0) {
-      results.push('')
-      continue
+/**
+ * Translate multiple texts in as few HTTP requests as possible.
+ *
+ * Strategy: concatenate all non-empty texts using `BATCH_SEPARATOR`, send them
+ * as one request (up to ~480 chars to stay within the 500-char API limit), then
+ * split the translated result back.  If a single text already exceeds the budget
+ * it is sent individually.
+ *
+ * This dramatically reduces the number of requests (and therefore total latency)
+ * compared with the old one-request-per-text approach.
+ */
+const translateBatch = async (texts: string[], delayMs = 200): Promise<string[]> => {
+  // Pre-filter: keep track of which indices need translation
+  const results: string[] = new Array(texts.length).fill('')
+  const nonEmpty: { index: number; text: string }[] = []
+
+  for (let i = 0; i < texts.length; i++) {
+    if (texts[i] && texts[i].trim().length > 0) {
+      nonEmpty.push({ index: i, text: texts[i] })
+    }
+  }
+
+  if (nonEmpty.length === 0) return results
+
+  // Build batches that fit within ~480 characters each
+  const MAX_CHARS = 480
+  const batches: { indices: number[]; combined: string }[] = []
+  let currentTexts: string[] = []
+  let currentIndices: number[] = []
+  let currentLength = 0
+
+  for (const { index, text } of nonEmpty) {
+    const addition = currentTexts.length > 0 ? BATCH_SEPARATOR.length + text.length : text.length
+    if (currentLength + addition > MAX_CHARS && currentTexts.length > 0) {
+      // Flush current batch
+      batches.push({ indices: [...currentIndices], combined: currentTexts.join(BATCH_SEPARATOR) })
+      currentTexts = []
+      currentIndices = []
+      currentLength = 0
+    }
+    currentTexts.push(text)
+    currentIndices.push(index)
+    currentLength += currentTexts.length === 1 ? text.length : BATCH_SEPARATOR.length + text.length
+  }
+  // Flush remaining
+  if (currentTexts.length > 0) {
+    batches.push({ indices: [...currentIndices], combined: currentTexts.join(BATCH_SEPARATOR) })
+  }
+
+  // Execute batches with concurrency limit of 2 to stay polite to the API
+  const CONCURRENCY = 2
+  for (let i = 0; i < batches.length; i += CONCURRENCY) {
+    const chunk = batches.slice(i, i + CONCURRENCY)
+    const translationPromises = chunk.map((batch) => translateToChineseSimple(batch.combined))
+    const translatedChunk = await Promise.all(translationPromises)
+
+    for (let j = 0; j < chunk.length; j++) {
+      const batch = chunk[j]
+      const translated = translatedChunk[j]
+      // Split the translated string back
+      const parts = translated.split(/\s*\|\|\|\s*/)
+
+      for (let k = 0; k < batch.indices.length; k++) {
+        results[batch.indices[k]] = (parts[k] ?? '').trim()
+      }
     }
 
-    const translated = await translateToChineseSimple(text)
-    results.push(translated)
-
-    // Add delay between requests to avoid rate limiting
-    if (texts.indexOf(text) < texts.length - 1) {
+    // Small delay between concurrent groups to avoid rate limits
+    if (i + CONCURRENCY < batches.length) {
       await new Promise((resolve) => setTimeout(resolve, delayMs))
     }
   }

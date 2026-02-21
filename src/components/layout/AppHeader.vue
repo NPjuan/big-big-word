@@ -34,6 +34,20 @@
           </svg>
           <span>Learn</span>
         </router-link>
+        <router-link to="/review" class="nav-link" exact-active-class="nav-link-active">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <path
+              d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+          </svg>
+          <span>Review</span>
+          <span v-if="wordStore.dueWordsCount > 0" class="nav-badge">{{
+            wordStore.dueWordsCount > 99 ? '99+' : wordStore.dueWordsCount
+          }}</span>
+        </router-link>
         <router-link to="/history" class="nav-link" exact-active-class="nav-link-active">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
             <path
@@ -474,6 +488,33 @@ onUnmounted(() => {
 
 .nav-link span {
   white-space: nowrap;
+}
+
+.nav-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 100px;
+  background: linear-gradient(135deg, #ea580c, #fb923c);
+  color: white;
+  font-size: 0.625rem;
+  font-weight: 800;
+  line-height: 1;
+  box-shadow: 0 1px 4px rgba(234, 88, 12, 0.3);
+  animation: badgePulse 2s ease-in-out infinite;
+}
+
+@keyframes badgePulse {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
 }
 
 .logo-wrapper {
