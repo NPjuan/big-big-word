@@ -8,16 +8,6 @@
       role="complementary"
       aria-label="AI Assistant"
     >
-      <!-- Resize handle -->
-      <div
-        class="resize-handle"
-        @mousedown="handleResizeStart"
-        aria-label="Resize drawer"
-        tabindex="0"
-      >
-        <div class="resize-bar"></div>
-      </div>
-
       <!-- Drawer header -->
       <div class="drawer-header">
         <div class="drawer-title-section">
@@ -132,7 +122,7 @@ import { ref, onMounted, onUnmounted, watch } from 'vue'
 import type { AiProvider } from '@/types/aiProvider.types'
 import { useAiDrawer } from '@/composables/useAiDrawer'
 
-const { isOpen, currentProvider, drawerWidth, providers, closeDrawer, selectProvider, setWidth } =
+const { isOpen, currentProvider, drawerWidth, providers, closeDrawer, selectProvider } =
   useAiDrawer()
 
 const iframeRef = ref<HTMLIFrameElement | null>(null)
@@ -174,35 +164,6 @@ const handleSelectProvider = (provider: AiProvider) => {
   iframeKey.value++
 }
 
-// --- Resize logic ---
-const isResizing = ref(false)
-
-const handleResizeStart = (e: MouseEvent) => {
-  e.preventDefault()
-  isResizing.value = true
-  const startX = e.clientX
-  const startWidth = drawerWidth.value
-
-  const handleMouseMove = (moveEvent: MouseEvent) => {
-    // Drawer is on the right, so dragging left increases width
-    const delta = startX - moveEvent.clientX
-    setWidth(startWidth + delta)
-  }
-
-  const handleMouseUp = () => {
-    isResizing.value = false
-    document.removeEventListener('mousemove', handleMouseMove)
-    document.removeEventListener('mouseup', handleMouseUp)
-    document.body.style.cursor = ''
-    document.body.style.userSelect = ''
-  }
-
-  document.body.style.cursor = 'col-resize'
-  document.body.style.userSelect = 'none'
-  document.addEventListener('mousemove', handleMouseMove)
-  document.addEventListener('mouseup', handleMouseUp)
-}
-
 // Close provider menu on outside click
 const handleClickOutside = (event: MouseEvent) => {
   const target = event.target as HTMLElement
@@ -233,34 +194,6 @@ onUnmounted(() => {
   box-shadow: -4px 0 16px rgba(0, 0, 0, 0.06);
   overflow: hidden;
   z-index: 50;
-}
-
-/* ===== Resize Handle ===== */
-.resize-handle {
-  position: absolute;
-  top: 0;
-  left: -3px;
-  bottom: 0;
-  width: 6px;
-  cursor: col-resize;
-  z-index: 10;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.resize-handle:hover .resize-bar,
-.resize-handle:active .resize-bar {
-  background: rgba(13, 148, 136, 0.5);
-  width: 3px;
-}
-
-.resize-bar {
-  width: 2px;
-  height: 40px;
-  background: rgba(13, 148, 136, 0.2);
-  border-radius: 2px;
-  transition: all 0.15s ease;
 }
 
 /* ===== Drawer Header ===== */
@@ -554,10 +487,6 @@ onUnmounted(() => {
     bottom: 0;
     width: 100% !important;
     z-index: 200;
-  }
-
-  .resize-handle {
-    display: none;
   }
 }
 </style>

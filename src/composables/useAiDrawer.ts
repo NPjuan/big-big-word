@@ -30,10 +30,6 @@ export const useAiDrawer = () => {
     currentProvider.value = provider
   }
 
-  const setWidth = (width: number) => {
-    drawerWidth.value = Math.max(320, Math.min(width, 1000))
-  }
-
   return {
     // State
     isOpen,
@@ -45,6 +41,5 @@ export const useAiDrawer = () => {
     openDrawer,
     closeDrawer,
     selectProvider,
-    setWidth,
   }
 }
