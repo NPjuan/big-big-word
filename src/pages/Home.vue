@@ -176,57 +176,43 @@ const handleAuthorClick = (event: MouseEvent | KeyboardEvent) => {
   )
 }
 
-// ===== Easter Egg: dense heart flood =====
+// ===== Easter Egg: balanced heart flood (~120 hearts, GPU optimized) =====
 const handleEasterEgg = () => {
   const sw = window.innerWidth
 
-  // Wave 1: instant dense burst from center
-  spawnHearts(sw / 2, 30, sw * 1.2, [60, 140], [1.6, 3.2], [0.5, 0.95], [0, 0.3])
+  // Wave 1: center burst with mixed sizes (hero big + fill small)
+  spawnHearts(sw / 2, 20, sw * 1.2, [120, 200], [2.2, 4.5], [0.5, 0.95], [0, 0.2])
+  spawnHearts(sw / 2, 8, sw * 0.8, [40, 70], [1.8, 3.5], [0.4, 0.8], [0, 0.3])
 
-  // Wave 2: left side dense stream
+  // Wave 2: left side
   setTimeout(() => {
-    spawnHearts(sw * 0.2, 22, sw * 0.55, [50, 120], [1.8, 3.4], [0.4, 0.9], [0, 0.4])
-  }, 120)
+    spawnHearts(sw * 0.2, 14, sw * 0.55, [100, 180], [2.4, 4.2], [0.4, 0.9], [0, 0.3])
+    spawnHearts(sw * 0.3, 6, sw * 0.4, [35, 60], [1.8, 3.2], [0.35, 0.75], [0, 0.3])
+  }, 180)
 
-  // Wave 3: right side dense stream
+  // Wave 3: right side
   setTimeout(() => {
-    spawnHearts(sw * 0.8, 22, sw * 0.55, [50, 120], [1.8, 3.4], [0.4, 0.9], [0, 0.4])
-  }, 240)
+    spawnHearts(sw * 0.8, 14, sw * 0.55, [100, 180], [2.4, 4.2], [0.4, 0.9], [0, 0.3])
+    spawnHearts(sw * 0.7, 6, sw * 0.4, [35, 60], [1.8, 3.2], [0.35, 0.75], [0, 0.3])
+  }, 360)
 
-  // Wave 4: center fill
+  // Wave 4: full-width fill with large anchors
   setTimeout(() => {
-    spawnHearts(sw / 2, 28, sw * 0.9, [70, 150], [2, 3.6], [0.35, 0.85], [0, 0.3])
-  }, 400)
+    spawnHearts(sw / 2, 16, sw * 1.3, [130, 220], [2.6, 4.8], [0.35, 0.85], [0, 0.25])
+    spawnHearts(sw / 2, 8, sw * 1.0, [45, 80], [2, 3.5], [0.3, 0.7], [0, 0.35])
+  }, 560)
 
-  // Wave 5: full-width dense fill
+  // Wave 5: scattered mid supplement
   setTimeout(() => {
-    spawnHearts(sw / 2, 25, sw * 1.3, [40, 110], [1.6, 3], [0.4, 0.9], [0, 0.4])
-  }, 550)
+    spawnHearts(sw * 0.4, 10, sw * 0.7, [90, 170], [2.2, 4], [0.3, 0.8], [0, 0.3])
+    spawnHearts(sw * 0.6, 6, sw * 0.5, [40, 65], [1.8, 3], [0.3, 0.7], [0, 0.3])
+  }, 780)
 
-  // Wave 6: left supplement
+  // Wave 6: gentle tail
   setTimeout(() => {
-    spawnHearts(sw * 0.35, 18, sw * 0.6, [55, 130], [1.8, 3.2], [0.35, 0.8], [0, 0.3])
-  }, 700)
-
-  // Wave 7: right supplement
-  setTimeout(() => {
-    spawnHearts(sw * 0.65, 18, sw * 0.6, [55, 130], [1.8, 3.2], [0.35, 0.8], [0, 0.3])
-  }, 830)
-
-  // Wave 8: scattered mid-screen
-  setTimeout(() => {
-    spawnHearts(sw / 2, 20, sw * 1.1, [60, 140], [2, 3.6], [0.3, 0.75], [0, 0.4])
+    spawnHearts(sw / 2, 8, sw * 1.0, [110, 200], [3, 5], [0.2, 0.6], [0, 0.4])
+    spawnHearts(sw / 2, 4, sw * 0.8, [50, 80], [2.5, 4], [0.15, 0.5], [0, 0.4])
   }, 1000)
-
-  // Wave 9: lingering dense tail
-  setTimeout(() => {
-    spawnHearts(sw / 2, 15, sw, [70, 130], [2.4, 4], [0.2, 0.6], [0, 0.5])
-  }, 1200)
-
-  // Wave 10: final scattered fill
-  setTimeout(() => {
-    spawnHearts(sw / 2, 12, sw * 1.2, [45, 100], [2, 3.2], [0.2, 0.5], [0, 0.5])
-  }, 1400)
 }
 
 const wordStore = useWordStore()
@@ -638,6 +624,8 @@ onMounted(() => {
   opacity: 0;
   pointer-events: none;
   filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.15));
+  will-change: transform, opacity;
+  contain: layout style;
 }
 
 @keyframes bubbleUp {
