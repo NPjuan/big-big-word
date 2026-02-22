@@ -102,8 +102,13 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, watch, nextTick } from 'vue'
 import { useWordStore } from '@/stores/wordStore'
+
+const emit = defineEmits<{
+  'word-added': []
+  'easter-egg': []
+}>()
 
 const wordStore = useWordStore()
 
@@ -152,6 +157,7 @@ const handleSubmit = async () => {
     successMessage.value = `"${inputWord.value}" added! 🎉`
     inputWord.value = ''
     triggerSuccessFlash()
+    emit('word-added')
 
     setTimeout(() => {
       successMessage.value = ''
@@ -170,11 +176,38 @@ const handleSubmit = async () => {
 const handleKeyDown = (event: KeyboardEvent) => {
   if (event.key === 'Enter' && !event.shiftKey) {
     event.preventDefault()
+    // Easter egg: Enter on secret keyword triggers hearts instead of submit
+    const trimmed = inputWord.value.trim().toLowerCase()
+    if (EASTER_EGG_KEYWORDS.includes(trimmed)) {
+      emit('easter-egg')
+      inputWord.value = ''
+      return
+    }
     handleSubmit()
   } else if (event.key === 'Escape') {
     clearInput()
   }
 }
+
+// ===== Easter Egg: detect secret keywords =====
+const EASTER_EGG_KEYWORDS = ['pjuan', 'pjy', 'panjunyuan']
+let easterEggCooldown = false
+
+watch(inputWord, (newVal) => {
+  const trimmed = newVal.trim().toLowerCase()
+  if (EASTER_EGG_KEYWORDS.includes(trimmed) && !easterEggCooldown) {
+    easterEggCooldown = true
+    emit('easter-egg')
+    // Clear the keyword from input so it doesn't stay visible
+    nextTick(() => {
+      inputWord.value = ''
+    })
+    // Cooldown to prevent rapid re-triggering
+    setTimeout(() => {
+      easterEggCooldown = false
+    }, 1000)
+  }
+})
 </script>
 
 <style scoped>

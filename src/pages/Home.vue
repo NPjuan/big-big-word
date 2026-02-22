@@ -48,9 +48,48 @@
     <!-- Floating Compact Input -->
     <div class="floating-input-wrapper">
       <div class="floating-input-container">
-        <CompactWordInput @word-added="handleWordAdded" />
+        <CompactWordInput @word-added="handleWordAdded" @easter-egg="handleEasterEgg" />
+      </div>
+      <!-- Inline Footer -->
+      <div class="inline-footer">
+        <span class="footer-text">Powered by </span>
+        <span
+          class="footer-author"
+          tabindex="0"
+          aria-label="Author Pan Junyuan - click for surprise"
+          @click="handleAuthorClick"
+          @keydown.enter="handleAuthorClick"
+        >
+          Pan Junyuan
+        </span>
       </div>
     </div>
+
+    <!-- Hearts Easter Egg -->
+    <transition-group name="heart-float" tag="div" class="hearts-container">
+      <svg
+        v-for="heart in hearts"
+        :key="heart.id"
+        class="floating-heart"
+        :style="{
+          left: heart.x + 'px',
+          animationDuration: heart.duration + 's',
+          animationDelay: heart.delay + 's',
+          width: heart.size + 'px',
+          height: heart.size + 'px',
+          opacity: 0,
+          '--heart-opacity': heart.opacity,
+          '--heart-sway': heart.sway + 'px',
+        }"
+        viewBox="0 0 24 24"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <path
+          d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"
+          :fill="heart.color"
+        />
+      </svg>
+    </transition-group>
   </div>
 </template>
 
@@ -59,6 +98,136 @@ import { ref, computed, onMounted } from 'vue'
 import { useWordStore } from '@/stores/wordStore'
 import CompactWordInput from '@/components/word-input/CompactWordInput.vue'
 import WordCard from '@/components/word-display/WordCard.vue'
+
+// ===== Hearts Easter Egg =====
+interface Heart {
+  id: number
+  x: number
+  duration: number
+  size: number
+  color: string
+  opacity: number
+  delay: number
+  sway: number
+}
+
+const hearts = ref<Heart[]>([])
+let heartIdCounter = 0
+
+const heartColors = [
+  '#ef4444',
+  '#f43f5e',
+  '#ec4899',
+  '#f97316',
+  '#e11d48',
+  '#db2777',
+  '#f472b6',
+  '#fb7185',
+]
+
+const spawnHearts = (
+  centerX: number,
+  count: number,
+  spread: number,
+  sizeRange: [number, number],
+  durationRange: [number, number],
+  opacityRange: [number, number] = [0.7, 1],
+  delayRange: [number, number] = [0, 0],
+) => {
+  for (let i = 0; i < count; i++) {
+    const id = heartIdCounter++
+    const delay = delayRange[0] + Math.random() * (delayRange[1] - delayRange[0])
+    const duration = durationRange[0] + Math.random() * (durationRange[1] - durationRange[0])
+    const opacity = opacityRange[0] + Math.random() * (opacityRange[1] - opacityRange[0])
+    // Random horizontal sway for bubble wobble effect
+    const sway = (Math.random() - 0.5) * 140
+    hearts.value.push({
+      id,
+      x: centerX + (Math.random() - 0.5) * spread,
+      duration,
+      size: sizeRange[0] + Math.random() * (sizeRange[1] - sizeRange[0]),
+      color: heartColors[Math.floor(Math.random() * heartColors.length)],
+      opacity,
+      delay,
+      sway,
+    })
+    setTimeout(
+      () => {
+        hearts.value = hearts.value.filter((h) => h.id !== id)
+      },
+      (delay + duration + 0.5) * 1000,
+    )
+  }
+}
+
+const handleAuthorClick = (event: MouseEvent | KeyboardEvent) => {
+  const target = event.currentTarget as HTMLElement
+  const rect = target.getBoundingClientRect()
+  const centerX = rect.left + rect.width / 2
+
+  spawnHearts(
+    centerX,
+    10 + Math.floor(Math.random() * 6),
+    120,
+    [30, 70],
+    [1.5, 3],
+    [0.6, 1],
+    [0, 0.3],
+  )
+}
+
+// ===== Easter Egg: dense heart flood =====
+const handleEasterEgg = () => {
+  const sw = window.innerWidth
+
+  // Wave 1: instant dense burst from center
+  spawnHearts(sw / 2, 30, sw * 1.2, [60, 140], [1.6, 3.2], [0.5, 0.95], [0, 0.3])
+
+  // Wave 2: left side dense stream
+  setTimeout(() => {
+    spawnHearts(sw * 0.2, 22, sw * 0.55, [50, 120], [1.8, 3.4], [0.4, 0.9], [0, 0.4])
+  }, 120)
+
+  // Wave 3: right side dense stream
+  setTimeout(() => {
+    spawnHearts(sw * 0.8, 22, sw * 0.55, [50, 120], [1.8, 3.4], [0.4, 0.9], [0, 0.4])
+  }, 240)
+
+  // Wave 4: center fill
+  setTimeout(() => {
+    spawnHearts(sw / 2, 28, sw * 0.9, [70, 150], [2, 3.6], [0.35, 0.85], [0, 0.3])
+  }, 400)
+
+  // Wave 5: full-width dense fill
+  setTimeout(() => {
+    spawnHearts(sw / 2, 25, sw * 1.3, [40, 110], [1.6, 3], [0.4, 0.9], [0, 0.4])
+  }, 550)
+
+  // Wave 6: left supplement
+  setTimeout(() => {
+    spawnHearts(sw * 0.35, 18, sw * 0.6, [55, 130], [1.8, 3.2], [0.35, 0.8], [0, 0.3])
+  }, 700)
+
+  // Wave 7: right supplement
+  setTimeout(() => {
+    spawnHearts(sw * 0.65, 18, sw * 0.6, [55, 130], [1.8, 3.2], [0.35, 0.8], [0, 0.3])
+  }, 830)
+
+  // Wave 8: scattered mid-screen
+  setTimeout(() => {
+    spawnHearts(sw / 2, 20, sw * 1.1, [60, 140], [2, 3.6], [0.3, 0.75], [0, 0.4])
+  }, 1000)
+
+  // Wave 9: lingering dense tail
+  setTimeout(() => {
+    spawnHearts(sw / 2, 15, sw, [70, 130], [2.4, 4], [0.2, 0.6], [0, 0.5])
+  }, 1200)
+
+  // Wave 10: final scattered fill
+  setTimeout(() => {
+    spawnHearts(sw / 2, 12, sw * 1.2, [45, 100], [2, 3.2], [0.2, 0.5], [0, 0.5])
+  }, 1400)
+}
 
 const wordStore = useWordStore()
 const displayWords = ref<any[]>([])
@@ -185,7 +354,7 @@ onMounted(() => {
 <style scoped>
 /* ===== Base Styles ===== */
 .home-page {
-  min-height: 100vh;
+  flex: 1;
   position: relative;
   overflow-x: hidden;
   padding-bottom: 120px; /* Space for floating input */
@@ -411,6 +580,110 @@ onMounted(() => {
   max-width: 900px;
   margin: 0 auto;
   pointer-events: auto;
+}
+
+/* ===== Inline Footer ===== */
+.inline-footer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 0 2px;
+  user-select: none;
+  pointer-events: auto;
+}
+
+.inline-footer .footer-text {
+  font-size: 11px;
+  color: rgba(100, 116, 139, 0.5);
+  font-weight: 400;
+  letter-spacing: 0.3px;
+}
+
+.inline-footer .footer-author {
+  font-size: 11px;
+  color: rgba(13, 148, 136, 0.6);
+  font-weight: 600;
+  cursor: pointer;
+  letter-spacing: 0.3px;
+  transition: all 0.3s ease;
+  padding: 1px 3px;
+  border-radius: 3px;
+}
+
+.inline-footer .footer-author:hover {
+  color: #0d9488;
+  background: rgba(13, 148, 136, 0.08);
+}
+
+.inline-footer .footer-author:active {
+  transform: scale(0.95);
+}
+
+/* Hearts Container */
+.hearts-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 9999;
+  overflow: hidden;
+}
+
+.floating-heart {
+  position: absolute;
+  bottom: -20px;
+  animation: bubbleUp ease-out forwards;
+  opacity: 0;
+  pointer-events: none;
+  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.15));
+}
+
+@keyframes bubbleUp {
+  0% {
+    opacity: var(--heart-opacity, 0.8);
+    transform: translateY(0) translateX(0) scale(0.3) rotate(0deg);
+  }
+  5% {
+    opacity: var(--heart-opacity, 0.8);
+    transform: translateY(-20px) translateX(calc(var(--heart-sway, 0px) * 0.1)) scale(1.05)
+      rotate(-3deg);
+  }
+  15% {
+    opacity: var(--heart-opacity, 0.8);
+    transform: translateY(-12vh) translateX(calc(var(--heart-sway, 0px) * -0.4)) scale(1.08)
+      rotate(5deg);
+  }
+  30% {
+    opacity: calc(var(--heart-opacity, 0.8) * 0.9);
+    transform: translateY(-28vh) translateX(calc(var(--heart-sway, 0px) * 0.5)) scale(1.02)
+      rotate(-4deg);
+  }
+  50% {
+    opacity: calc(var(--heart-opacity, 0.8) * 0.7);
+    transform: translateY(-48vh) translateX(calc(var(--heart-sway, 0px) * -0.6)) scale(0.95)
+      rotate(6deg);
+  }
+  65% {
+    opacity: calc(var(--heart-opacity, 0.8) * 0.5);
+    transform: translateY(-62vh) translateX(calc(var(--heart-sway, 0px) * 0.4)) scale(0.85)
+      rotate(-3deg);
+  }
+  80% {
+    opacity: calc(var(--heart-opacity, 0.8) * 0.25);
+    transform: translateY(-80vh) translateX(calc(var(--heart-sway, 0px) * -0.3)) scale(0.7)
+      rotate(4deg);
+  }
+  92% {
+    opacity: calc(var(--heart-opacity, 0.8) * 0.08);
+    transform: translateY(-98vh) translateX(calc(var(--heart-sway, 0px) * 0.15)) scale(0.5)
+      rotate(-2deg);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-115vh) translateX(var(--heart-sway, 0px)) scale(0.35) rotate(0deg);
+  }
 }
 
 /* ===== Glass Card Effect ===== */

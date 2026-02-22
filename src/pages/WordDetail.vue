@@ -533,7 +533,7 @@ onMounted(() => {
 <style scoped>
 /* Page Container */
 .word-detail-page {
-  min-height: 100vh;
+  flex: 1;
   background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 50%, #fff7ed 100%);
   padding: 1rem;
 }

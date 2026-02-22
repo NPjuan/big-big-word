@@ -79,7 +79,7 @@ onUnmounted(() => {
 <style scoped>
 /* ===== Base Styles ===== */
 .word-learning-page {
-  min-height: 100vh;
+  flex: 1;
   position: relative;
   overflow-x: hidden;
 }

@@ -104,6 +104,8 @@ const mainContentStyle = computed(() => ({
   overflow-y: auto;
   overflow-x: hidden;
   padding: 0;
+  display: flex;
+  flex-direction: column;
   scroll-behavior: smooth;
   scrollbar-width: thin;
   scrollbar-color: rgba(13, 148, 136, 0.5) rgba(13, 148, 136, 0.05);

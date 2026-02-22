@@ -537,7 +537,7 @@ const handleConfirmExit = () => {
 <style scoped>
 /* ===== Base Styles ===== */
 .review-page {
-  min-height: 100vh;
+  flex: 1;
   position: relative;
   overflow-x: hidden;
 }
@@ -630,7 +630,7 @@ const handleConfirmExit = () => {
   max-width: 720px;
   margin: 0 auto;
   padding: 100px 1.5rem 2rem; /* top padding reserves space for fixed header */
-  min-height: 100vh;
+  flex: 1;
   display: flex;
   flex-direction: column;
   justify-content: center;
