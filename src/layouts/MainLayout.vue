@@ -1,23 +1,46 @@
 <template>
   <div class="main-layout">
-    <!-- Fixed Header - Pinned to top -->
-    <header class="fixed-header">
-      <AppHeader />
-    </header>
+    <!-- Main content area (shrinks when AI drawer is open) -->
+    <div class="main-content-area" :style="mainContentStyle">
+      <!-- Fixed Header - Pinned to top -->
+      <header class="fixed-header">
+        <AppHeader />
+      </header>
 
-    <!-- Scrollable Content Area -->
-    <main class="scrollable-content">
-      <router-view v-slot="{ Component, route }">
-        <transition name="page" mode="out-in">
-          <component :is="Component" :key="route.path" />
-        </transition>
-      </router-view>
-    </main>
+      <!-- Scrollable Content Area -->
+      <main class="scrollable-content">
+        <router-view v-slot="{ Component, route }">
+          <transition name="page" mode="out-in">
+            <component :is="Component" :key="route.path" />
+          </transition>
+        </router-view>
+      </main>
+    </div>
+
+    <!-- AI Drawer (side-by-side, not overlay) -->
+    <AiDrawer />
   </div>
 </template>
 
 <script setup lang="ts">
+import { computed, watchEffect } from 'vue'
 import AppHeader from '@/components/layout/AppHeader.vue'
+import AiDrawer from '@/components/ai/AiDrawer.vue'
+import { useAiDrawer } from '@/composables/useAiDrawer'
+
+const { isOpen, drawerWidth } = useAiDrawer()
+
+// Expose drawer offset as a global CSS variable on :root
+// so all fixed-position elements can use var(--ai-drawer-offset) for their `right` value
+watchEffect(() => {
+  const offset = isOpen.value ? `${drawerWidth.value}px` : '0px'
+  document.documentElement.style.setProperty('--ai-drawer-offset', offset)
+})
+
+// Main content area takes remaining width when drawer is open
+const mainContentStyle = computed(() => ({
+  width: isOpen.value ? `calc(100% - ${drawerWidth.value}px)` : '100%',
+}))
 </script>
 
 <style scoped>
@@ -25,12 +48,22 @@ import AppHeader from '@/components/layout/AppHeader.vue'
 .main-layout {
   width: 100%;
   height: 100vh;
-  height: 100dvh; /* Better mobile support */
+  height: 100dvh;
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   overflow: hidden;
   background: linear-gradient(135deg, #f0fdfa 0%, #e0f2fe 50%, #fef3c7 100%);
   background-attachment: fixed;
+}
+
+/* ===== Main Content Area ===== */
+.main-content-area {
+  flex-shrink: 0;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  transition: width 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 /* ===== Fixed Header - Pinned to Top ===== */
@@ -38,7 +71,7 @@ import AppHeader from '@/components/layout/AppHeader.vue'
   position: fixed;
   top: 0;
   left: 0;
-  right: 0;
+  right: var(--ai-drawer-offset, 0px);
   z-index: 100;
   padding: 0;
   background: linear-gradient(
@@ -51,6 +84,7 @@ import AppHeader from '@/components/layout/AppHeader.vue'
   border-bottom: 1px solid rgba(13, 148, 136, 0.1);
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
   animation: slideDown 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: right 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 @keyframes slideDown {
@@ -71,7 +105,6 @@ import AppHeader from '@/components/layout/AppHeader.vue'
   overflow-x: hidden;
   padding: 0;
   scroll-behavior: smooth;
-  /* Custom scrollbar styling */
   scrollbar-width: thin;
   scrollbar-color: rgba(13, 148, 136, 0.5) rgba(13, 148, 136, 0.05);
 }
@@ -114,7 +147,16 @@ import AppHeader from '@/components/layout/AppHeader.vue'
 
 /* ===== Responsive Design ===== */
 @media (max-width: 768px) {
+  .main-layout {
+    flex-direction: column;
+  }
+
+  .main-content-area {
+    width: 100% !important;
+  }
+
   .fixed-header {
+    right: 0 !important;
     padding: 0;
   }
 

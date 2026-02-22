@@ -381,8 +381,9 @@ onMounted(() => {
   position: fixed;
   bottom: 0;
   left: 0;
-  right: 0;
+  right: var(--ai-drawer-offset, 0px);
   z-index: 50;
+  transition: right 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   padding: 1rem 1.5rem 1.5rem;
   background: linear-gradient(
     to top,

@@ -117,6 +117,25 @@
           </div>
         </div>
 
+        <!-- AI Assistant Button -->
+        <button
+          class="ai-btn"
+          @click="handleToggleAi"
+          :class="{ 'ai-btn-active': isAiOpen }"
+          aria-label="Toggle AI assistant"
+          tabindex="0"
+        >
+          <svg class="btn-icon ai-sparkle" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <path
+              d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 00-2.455 2.456zM16.894 20.567L16.5 21.75l-.394-1.183a2.25 2.25 0 00-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 001.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 001.423 1.423l1.183.394-1.183.394a2.25 2.25 0 00-1.423 1.423z"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+          </svg>
+          <span>AI</span>
+        </button>
+
         <!-- Import Button -->
         <div class="import-wrapper">
           <button
@@ -266,8 +285,10 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useWordStore } from '@/stores/wordStore'
 import { exportToCSV, exportToJSON, parseImportJSON, readFileAsText } from '@/utils/wordExport'
+import { useAiDrawer } from '@/composables/useAiDrawer'
 
 const wordStore = useWordStore()
+const { isOpen: isAiOpen, toggleDrawer: handleToggleAi } = useAiDrawer()
 const showExportMenu = ref(false)
 const isExporting = ref(false)
 const showExportSuccess = ref(false)
@@ -585,21 +606,21 @@ onUnmounted(() => {
 
 .header-stats {
   display: flex;
-  gap: 0.75rem;
-  flex-wrap: wrap;
+  gap: 0.5rem;
+  flex-wrap: nowrap;
 }
 
 .stat-card {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.5rem 0.75rem;
+  gap: 0.375rem;
+  padding: 0.375rem 0.625rem;
   border-radius: 8px;
   backdrop-filter: blur(8px);
   border: 1px solid rgba(255, 255, 255, 0.3);
   transition: all 0.15s ease;
   cursor: default;
-  min-width: 90px;
+  white-space: nowrap;
 }
 
 .stat-card:hover {
@@ -620,9 +641,9 @@ onUnmounted(() => {
 }
 
 .stat-icon-wrapper {
-  width: 28px;
-  height: 28px;
-  border-radius: 6px;
+  width: 24px;
+  height: 24px;
+  border-radius: 5px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -643,8 +664,8 @@ onUnmounted(() => {
 }
 
 .stat-icon {
-  width: 14px;
-  height: 14px;
+  width: 12px;
+  height: 12px;
   color: white;
   stroke-width: 2;
 }
@@ -656,7 +677,7 @@ onUnmounted(() => {
 }
 
 .stat-value {
-  font-size: 1rem;
+  font-size: 0.875rem;
   font-weight: 800;
   background: linear-gradient(135deg, #0d9488 0%, #2dd4bf 100%);
   -webkit-background-clip: text;
@@ -666,11 +687,62 @@ onUnmounted(() => {
 }
 
 .stat-label {
-  font-size: 0.625rem;
-  color: #64748b;
+  font-size: 0.5625rem;
+  color: #94a3b8;
   font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.03em;
+  letter-spacing: 0.02em;
+}
+
+/* AI Assistant Button */
+.ai-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.5rem 0.875rem;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: #7c3aed;
+  background: linear-gradient(135deg, rgba(124, 58, 237, 0.08), rgba(139, 92, 246, 0.08));
+  border: 1.5px solid rgba(124, 58, 237, 0.2);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.ai-btn:hover {
+  background: linear-gradient(135deg, rgba(124, 58, 237, 0.14), rgba(139, 92, 246, 0.14));
+  border-color: rgba(124, 58, 237, 0.35);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(124, 58, 237, 0.15);
+}
+
+.ai-btn-active {
+  background: linear-gradient(135deg, #7c3aed, #8b5cf6);
+  color: white;
+  border-color: transparent;
+  box-shadow: 0 2px 12px rgba(124, 58, 237, 0.3);
+}
+
+.ai-btn-active:hover {
+  background: linear-gradient(135deg, #6d28d9, #7c3aed);
+  color: white;
+  box-shadow: 0 4px 16px rgba(124, 58, 237, 0.4);
+}
+
+.ai-sparkle {
+  animation: sparkleGlow 2s ease-in-out infinite;
+}
+
+@keyframes sparkleGlow {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
 }
 
 /* Import Button */
@@ -886,6 +958,22 @@ onUnmounted(() => {
 }
 
 /* Responsive Design */
+@media (max-width: 1024px) {
+  .stat-icon-wrapper {
+    display: none;
+  }
+
+  .stat-card {
+    padding: 0.25rem 0.5rem;
+  }
+
+  .stat-info {
+    flex-direction: row;
+    align-items: baseline;
+    gap: 0.25rem;
+  }
+}
+
 @media (max-width: 768px) {
   .app-header {
     padding: 0.625rem 1rem;
