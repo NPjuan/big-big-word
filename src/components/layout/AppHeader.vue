@@ -121,7 +121,7 @@
         <button
           class="ai-btn"
           @click="handleToggleAi"
-          :class="{ 'ai-btn-active': isAiOpen }"
+          :class="{ 'ai-btn-active': isAiOpen, 'ai-btn-pulse': hasNewEtymology }"
           aria-label="Toggle AI assistant"
           tabindex="0"
         >
@@ -288,7 +288,7 @@ import { exportToCSV, exportToJSON, parseImportJSON, readFileAsText } from '@/ut
 import { useAiDrawer } from '@/composables/useAiDrawer'
 
 const wordStore = useWordStore()
-const { isOpen: isAiOpen, toggleDrawer: handleToggleAi } = useAiDrawer()
+const { isOpen: isAiOpen, toggleDrawer: handleToggleAi, hasNewEtymology } = useAiDrawer()
 const showExportMenu = ref(false)
 const isExporting = ref(false)
 const showExportSuccess = ref(false)
@@ -743,6 +743,29 @@ onUnmounted(() => {
   50% {
     opacity: 0.7;
   }
+}
+
+/* AI Button Pulse Animation — new etymology available */
+.ai-btn-pulse {
+  animation: aiPulse 1.5s ease-in-out infinite;
+  box-shadow: 0 0 0 0 rgba(124, 58, 237, 0.4);
+}
+
+@keyframes aiPulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(124, 58, 237, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(124, 58, 237, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(124, 58, 237, 0);
+  }
+}
+
+.ai-btn-pulse:not(.ai-btn-active) {
+  border-color: rgba(124, 58, 237, 0.5);
+  background: linear-gradient(135deg, rgba(124, 58, 237, 0.14), rgba(139, 92, 246, 0.14));
 }
 
 /* Import Button */

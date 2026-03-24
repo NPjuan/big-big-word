@@ -76,6 +76,42 @@
         </div>
       </div>
 
+      <!-- Pending Etymology Prompt Card -->
+      <transition name="prompt-slide">
+        <div v-if="pendingPrompt" class="pending-prompt-card">
+          <div class="prompt-card-header">
+            <div class="prompt-card-icon">🌱</div>
+            <div class="prompt-card-title-section">
+              <h4 class="prompt-card-title">词根词源分析</h4>
+              <p class="prompt-card-subtitle">复制下方内容粘贴到 AI 对话中</p>
+            </div>
+            <button
+              class="prompt-dismiss-btn"
+              @click="handleDismissPrompt"
+              aria-label="Dismiss prompt"
+              tabindex="0"
+            >
+              <v-icon icon="mdi-close" size="14" />
+            </button>
+          </div>
+          <div class="prompt-card-body">
+            <pre class="prompt-text">{{ pendingPrompt }}</pre>
+          </div>
+          <div class="prompt-card-actions">
+            <button
+              class="prompt-copy-btn"
+              :class="{ 'copy-success': copySuccess }"
+              @click="handleCopyPrompt"
+              aria-label="Copy prompt to clipboard"
+              tabindex="0"
+            >
+              <v-icon :icon="copySuccess ? 'mdi-check' : 'mdi-content-copy'" size="14" />
+              <span>{{ copySuccess ? '已复制!' : '复制 Prompt' }}</span>
+            </button>
+          </div>
+        </div>
+      </transition>
+
       <!-- Drawer content -->
       <div class="drawer-content">
         <!-- iframe provider -->
@@ -122,8 +158,18 @@ import { ref, onMounted, onUnmounted, watch } from 'vue'
 import type { AiProvider } from '@/types/aiProvider.types'
 import { useAiDrawer } from '@/composables/useAiDrawer'
 
-const { isOpen, currentProvider, drawerWidth, providers, closeDrawer, selectProvider } =
-  useAiDrawer()
+const {
+  isOpen,
+  currentProvider,
+  drawerWidth,
+  providers,
+  pendingPrompt,
+  closeDrawer,
+  selectProvider,
+  clearPendingPrompt,
+} = useAiDrawer()
+
+const copySuccess = ref(false)
 
 const iframeRef = ref<HTMLIFrameElement | null>(null)
 const iframeKey = ref(0)
@@ -156,6 +202,23 @@ watch(iframeRef, (iframe) => {
 const handleRefresh = () => {
   iframeKey.value++
   isLoading.value = true
+}
+
+const handleCopyPrompt = async () => {
+  if (!pendingPrompt.value) return
+  try {
+    await navigator.clipboard.writeText(pendingPrompt.value)
+    copySuccess.value = true
+    setTimeout(() => {
+      copySuccess.value = false
+    }, 2000)
+  } catch (err) {
+    console.error('Failed to copy prompt:', err)
+  }
+}
+
+const handleDismissPrompt = () => {
+  clearPendingPrompt()
 }
 
 const handleSelectProvider = (provider: AiProvider) => {
@@ -450,6 +513,152 @@ onUnmounted(() => {
   font-size: 0.75rem;
   font-weight: 600;
   color: #0d9488;
+}
+
+/* ===== Pending Prompt Card ===== */
+.pending-prompt-card {
+  flex-shrink: 0;
+  margin: 0.75rem;
+  background: linear-gradient(135deg, rgba(124, 58, 237, 0.04), rgba(139, 92, 246, 0.06));
+  border: 1.5px solid rgba(124, 58, 237, 0.15);
+  border-radius: 12px;
+  overflow: hidden;
+  animation: promptSlideIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes promptSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.prompt-card-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.625rem 0.75rem;
+  background: linear-gradient(135deg, rgba(124, 58, 237, 0.06), rgba(139, 92, 246, 0.08));
+  border-bottom: 1px solid rgba(124, 58, 237, 0.1);
+}
+
+.prompt-card-icon {
+  font-size: 1.25rem;
+  flex-shrink: 0;
+}
+
+.prompt-card-title-section {
+  flex: 1;
+  min-width: 0;
+}
+
+.prompt-card-title {
+  margin: 0;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: #4c1d95;
+  line-height: 1.2;
+}
+
+.prompt-card-subtitle {
+  margin: 0;
+  font-size: 0.6875rem;
+  color: #7c3aed;
+  font-weight: 500;
+  opacity: 0.8;
+}
+
+.prompt-dismiss-btn {
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  border: none;
+  background: transparent;
+  color: #94a3b8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
+}
+
+.prompt-dismiss-btn:hover {
+  background: rgba(124, 58, 237, 0.1);
+  color: #7c3aed;
+}
+
+.prompt-card-body {
+  padding: 0.625rem 0.75rem;
+  max-height: 180px;
+  overflow-y: auto;
+}
+
+.prompt-text {
+  margin: 0;
+  font-size: 0.75rem;
+  font-family: 'SF Mono', 'Monaco', 'Consolas', monospace;
+  color: #334155;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.prompt-card-actions {
+  padding: 0.5rem 0.75rem;
+  border-top: 1px solid rgba(124, 58, 237, 0.08);
+  display: flex;
+  justify-content: flex-end;
+}
+
+.prompt-copy-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.375rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: white;
+  background: linear-gradient(135deg, #7c3aed, #8b5cf6);
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(124, 58, 237, 0.25);
+}
+
+.prompt-copy-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(124, 58, 237, 0.35);
+}
+
+.prompt-copy-btn:active {
+  transform: translateY(0);
+}
+
+.prompt-copy-btn.copy-success {
+  background: linear-gradient(135deg, #16a34a, #22c55e);
+  box-shadow: 0 2px 8px rgba(34, 197, 94, 0.3);
+}
+
+/* ===== Prompt Card Transition ===== */
+.prompt-slide-enter-active {
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.prompt-slide-leave-active {
+  transition: all 0.2s ease;
+}
+.prompt-slide-enter-from,
+.prompt-slide-leave-to {
+  opacity: 0;
+  transform: translateY(-12px);
+  max-height: 0;
+  margin: 0 0.75rem;
+  padding: 0;
 }
 
 /* ===== Transitions ===== */

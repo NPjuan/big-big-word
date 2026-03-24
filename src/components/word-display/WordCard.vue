@@ -1,7 +1,7 @@
 <template>
   <div
     class="word-card"
-    :class="{ 'card-dragging': isDragging, 'card-revealed': isRevealed }"
+    :class="{ 'card-dragging': isDragging, 'card-revealed': isRevealed, 'card-fly-in': flyIn }"
     :style="cardStyle"
     @mousedown="handleDragStart"
     @touchstart="handleDragStart"
@@ -139,6 +139,10 @@ const props = defineProps({
     type: Number,
     default: 0,
   },
+  flyIn: {
+    type: Boolean,
+    default: false,
+  },
 })
 
 const emit = defineEmits<{
@@ -231,6 +235,15 @@ const cardStyle = computed(() => {
       zIndex,
       opacity: props.index < 4 ? 1 : 0,
       transition: 'all 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94)', // Smoother, slower easing
+    }
+  }
+
+  // When flying in, don't set inline transform — let the CSS animation control it
+  if (props.flyIn) {
+    return {
+      zIndex,
+      opacity: props.index < 4 ? 1 : 0,
+      transition: 'none',
     }
   }
 
@@ -776,6 +789,28 @@ watch(
   .swipe-indicator svg {
     width: 26px;
     height: 26px;
+  }
+}
+
+/* ===== Fly-in Animation ===== */
+.card-fly-in {
+  animation: cardFlyIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+@keyframes cardFlyIn {
+  0% {
+    opacity: 0;
+    transform: translateY(400px) scale(0.7) rotate(-6deg);
+    filter: blur(4px);
+  }
+  60% {
+    opacity: 1;
+    filter: blur(0);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1) rotate(0deg);
+    filter: blur(0);
   }
 }
 

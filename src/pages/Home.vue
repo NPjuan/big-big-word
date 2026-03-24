@@ -36,6 +36,7 @@
               :index="index"
               :total="displayWords.length"
               :first-card-drag-x="firstCardDragX"
+              :fly-in="word._flyIn === true"
               @swipe-left="handleSwipeLeft"
               @swipe-right="handleSwipeRight"
               @drag="handleDrag"
@@ -94,8 +95,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useWordStore } from '@/stores/wordStore'
+import { useAiDrawer } from '@/composables/useAiDrawer'
 import CompactWordInput from '@/components/word-input/CompactWordInput.vue'
 import WordCard from '@/components/word-display/WordCard.vue'
 
@@ -216,6 +218,7 @@ const handleEasterEgg = () => {
 }
 
 const wordStore = useWordStore()
+const { openWithEtymologyPrompt } = useAiDrawer()
 const displayWords = ref<any[]>([])
 const isAnimating = ref(false)
 const firstCardDragX = ref(0)
@@ -327,8 +330,48 @@ const handleDrag = (dragX: number) => {
 }
 
 const handleWordAdded = () => {
-  // Reinitialize to show new word
-  initializeDisplayWords()
+  const newestWord = wordStore.words[0]
+  if (!newestWord) return
+
+  const maxCards = 4
+
+  // Insert the new word at position 0 with fly-in flag
+  displayWords.value.unshift({
+    ...newestWord,
+    displayIndex: 0,
+    _flyIn: true,
+  })
+
+  // Trim the stack to max cards
+  if (displayWords.value.length > maxCards) {
+    displayWords.value = displayWords.value.slice(0, maxCards)
+  }
+
+  // Refresh display indices
+  displayWords.value.forEach((word: any, index: number) => {
+    word.displayIndex = index
+  })
+
+  // Clear the fly-in flag after the animation completes (600ms)
+  setTimeout(() => {
+    const first = displayWords.value[0]
+    if (first && first.id === newestWord.id) {
+      first._flyIn = false
+    }
+  }, 650)
+
+  // Trigger AI etymology analysis in sidebar after a short delay
+  // so the fly-in animation is visible first
+  setTimeout(() => {
+    // Convert ChineseMeaning[] to a readable summary string
+    const meaningsSummary = newestWord.chineseMeaning
+      .map(
+        (m: { partOfSpeech: string; definitions: string[] }) =>
+          `${m.partOfSpeech}: ${m.definitions.join('，')}`,
+      )
+      .join('；')
+    openWithEtymologyPrompt(newestWord.word, meaningsSummary)
+  }, 800)
 }
 
 onMounted(() => {
@@ -522,13 +565,14 @@ onMounted(() => {
   opacity: 0;
 }
 
+/* Suppress the default TransitionGroup enter animation
+   — the fly-in effect is handled by WordCard's own .card-fly-in CSS animation */
 .card-stack-enter-active {
-  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition: none;
 }
 
 .card-stack-enter-from {
-  opacity: 0;
-  transform: scale(0.9);
+  /* no transform/opacity — card appears instantly (fly-in animation takes over) */
 }
 
 /* ===== Floating Input ===== */
