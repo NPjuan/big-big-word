@@ -1,16 +1,21 @@
 <template>
   <div
     class="word-card"
-    :class="{ 'card-dragging': isDragging, 'card-revealed': isRevealed, 'card-fly-in': flyIn }"
+    :class="{
+      'card-dragging': isDragging,
+      'card-revealed': isRevealed,
+      'card-fly-in': flyIn,
+    }"
     :style="cardStyle"
     @mousedown="handleDragStart"
     @touchstart="handleDragStart"
     @dblclick="handleDoubleClick"
+    ref="cardEl"
     tabindex="0"
     role="article"
     aria-label="Word flashcard"
   >
-    <!-- Card Content -->
+    <!-- Card Content (3D container) -->
     <div class="card-content">
       <div class="card-face">
         <div class="card-header">
@@ -118,7 +123,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, type PropType } from 'vue'
+import { ref, computed, watch, nextTick, type PropType } from 'vue'
 import type { Word } from '@/types/word.types'
 import { playAudio as playAudioUtil } from '@/utils/audioUtils'
 
@@ -143,13 +148,22 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
+  spinning: {
+    type: Boolean,
+    default: false,
+  },
 })
 
 const emit = defineEmits<{
   (e: 'swipe-left'): void
   (e: 'swipe-right'): void
   (e: 'drag', dragX: number): void
+  (e: 'spin-end'): void
 }>()
+
+const cardEl = ref<HTMLElement | null>(null)
+const isPlayingSpinAnim = ref(false)
+const isSettlingAfterSpin = ref(false)
 
 const isDragging = ref(false)
 const isRevealed = ref(false)
@@ -247,6 +261,28 @@ const cardStyle = computed(() => {
     }
   }
 
+  // When spinning, let Web Animations API control the transform
+  if (props.spinning || isPlayingSpinAnim.value) {
+    return {
+      zIndex: 999, // Keep spinning card on top
+      opacity: 1,
+      transition: 'none',
+    }
+  }
+
+  // Brief settling period right after spin animation ends.
+  // The Web Animations API just released control (fill:'none'),
+  // so we pin the card at its resting position with no transition
+  // to avoid a one-frame flash before the normal transition kicks in.
+  if (isSettlingAfterSpin.value) {
+    return {
+      transform: `translate(${translateX}px, ${translateY}px) rotate(${stackRotate}deg) scale(${scale})`,
+      zIndex,
+      opacity: props.index < 4 ? 1 : 0,
+      transition: 'none',
+    }
+  }
+
   return {
     transform: `translate(${translateX}px, ${translateY}px) rotate(${stackRotate}deg) scale(${scale})`,
     zIndex,
@@ -271,8 +307,101 @@ const playAudio = async () => {
   }
 }
 
+/**
+ * Play the lift-shake-slam animation using Web Animations API.
+ * This avoids CSS `animation: ... forwards` which permanently overrides
+ * inline transforms and breaks drag after animation ends.
+ */
+const playSpinAnimation = async () => {
+  await nextTick()
+  const el = cardEl.value
+  if (!el) {
+    emit('spin-end')
+    return
+  }
+
+  // Respect prefers-reduced-motion — skip animation entirely
+  const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  if (prefersReducedMotion) {
+    emit('spin-end')
+    return
+  }
+
+  isPlayingSpinAnim.value = true
+
+  const animation = el.animate(
+    [
+      // 0% — resting
+      { transform: 'translateY(0) scale(1)', offset: 0 },
+      // Lift up
+      { transform: 'translateY(-120px) scale(1.06)', offset: 0.15 },
+      // Shake left
+      { transform: 'translateY(-110px) scale(1.06) rotate(-8deg)', offset: 0.22 },
+      // Shake right
+      { transform: 'translateY(-115px) scale(1.08) rotate(6deg)', offset: 0.3 },
+      // Shake left
+      { transform: 'translateY(-108px) scale(1.06) rotate(-5deg)', offset: 0.38 },
+      // Shake right
+      { transform: 'translateY(-112px) scale(1.07) rotate(4deg)', offset: 0.46 },
+      // Center & pause briefly
+      { transform: 'translateY(-110px) scale(1.05) rotate(0deg)', offset: 0.55 },
+      // Start falling
+      { transform: 'translateY(-40px) scale(1.02) rotate(0deg)', offset: 0.72 },
+      // Slam overshoot
+      { transform: 'translateY(14px) scale(1) rotate(0deg)', offset: 0.85 },
+      // Bounce back
+      { transform: 'translateY(-5px) scale(1) rotate(0deg)', offset: 0.93 },
+      // Settle
+      { transform: 'translateY(0) scale(1) rotate(0deg)', offset: 1 },
+    ],
+    {
+      duration: 900,
+      easing: 'cubic-bezier(0.22, 1, 0.36, 1)',
+      fill: 'none', // CRITICAL: no 'forwards' — inline styles take back control after animation
+    },
+  )
+
+  animation.onfinish = () => {
+    // Enter settling state: pin the card at its resting position with no
+    // transition so there's no visual flash when the animation releases.
+    isSettlingAfterSpin.value = true
+    isPlayingSpinAnim.value = false
+    emit('spin-end')
+
+    // After two frames, exit settling and allow normal transitions
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        isSettlingAfterSpin.value = false
+      })
+    })
+  }
+  animation.oncancel = () => {
+    isSettlingAfterSpin.value = true
+    isPlayingSpinAnim.value = false
+    emit('spin-end')
+
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        isSettlingAfterSpin.value = false
+      })
+    })
+  }
+}
+
+// Watch for spinning prop to trigger animation via JS
+watch(
+  () => props.spinning,
+  (val) => {
+    if (val) {
+      playSpinAnimation()
+    }
+  },
+)
+
 const handleDragStart = (e: MouseEvent | TouchEvent) => {
   if (props.index !== 0) return
+  // Block drag during spinning animation
+  if (props.spinning || isPlayingSpinAnim.value) return
 
   isDragging.value = true
   const clientX = 'touches' in e ? (e.touches[0]?.clientX ?? 0) : e.clientX
@@ -374,6 +503,7 @@ watch(
   height: 100%;
   cursor: grab;
   transform-origin: center center;
+  contain: layout style;
   /* Transition is handled dynamically in cardStyle */
 }
 
@@ -792,7 +922,7 @@ watch(
   }
 }
 
-/* ===== Fly-in Animation ===== */
+/* ===== Fly-in Animation (for empty-stack fallback) ===== */
 .card-fly-in {
   animation: cardFlyIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
 }

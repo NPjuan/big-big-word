@@ -27,19 +27,21 @@
           <p class="empty-description">Add your first word below to begin mastering vocabulary</p>
         </div>
 
-        <div v-else class="card-stack-container">
+        <div v-else class="card-stack-container" :class="{ 'stack-shake': isShaking }">
           <TransitionGroup name="card-stack">
             <WordCard
               v-for="(word, index) in displayWords"
-              :key="word.id"
+              :key="word._displayKey || word.id"
               :word="word"
               :index="index"
               :total="displayWords.length"
               :first-card-drag-x="firstCardDragX"
               :fly-in="word._flyIn === true"
+              :spinning="word._spinning === true"
               @swipe-left="handleSwipeLeft"
               @swipe-right="handleSwipeRight"
               @drag="handleDrag"
+              @spin-end="handleSpinEnd"
             />
           </TransitionGroup>
         </div>
@@ -219,9 +221,12 @@ const handleEasterEgg = () => {
 
 const wordStore = useWordStore()
 const { openWithEtymologyPrompt } = useAiDrawer()
+let displayKeyCounter = 0
 const displayWords = ref<any[]>([])
 const isAnimating = ref(false)
+const isShaking = ref(false)
 const firstCardDragX = ref(0)
+const pendingNewWord = ref<any>(null)
 
 // Pick the next best word to show based on SRS priority, excluding IDs in the set
 const pickNextWord = (excludeIds: Set<string>) => {
@@ -245,6 +250,7 @@ const initializeDisplayWords = () => {
   displayWords.value = prioritized.slice(0, maxCards).map((word, index) => ({
     ...word,
     displayIndex: index,
+    _displayKey: `dk-${displayKeyCounter++}`,
   }))
 }
 
@@ -274,6 +280,7 @@ const handleSwipeRight = () => {
         displayWords.value.push({
           ...(freshData ?? nextWord),
           displayIndex: displayWords.value.length,
+          _displayKey: `dk-${displayKeyCounter++}`,
         })
       }
       // If no word found at all (shouldn't happen), deck just shrinks by 1
@@ -313,6 +320,7 @@ const handleSwipeLeft = () => {
         displayWords.value.push({
           ...(freshData ?? nextWord),
           displayIndex: displayWords.value.length,
+          _displayKey: `dk-${displayKeyCounter++}`,
         })
       }
     }
@@ -335,14 +343,89 @@ const handleWordAdded = () => {
 
   const maxCards = 4
 
-  // Insert the new word at position 0 with fly-in flag
-  displayWords.value.unshift({
-    ...newestWord,
-    displayIndex: 0,
-    _flyIn: true,
-  })
+  // Case 1: Empty stack — use simple fly-in fallback
+  if (displayWords.value.length === 0) {
+    displayWords.value.unshift({
+      ...newestWord,
+      displayIndex: 0,
+      _flyIn: true,
+      _displayKey: `dk-${displayKeyCounter++}`,
+    })
 
-  // Trim the stack to max cards
+    // Trim the stack to max cards
+    if (displayWords.value.length > maxCards) {
+      displayWords.value = displayWords.value.slice(0, maxCards)
+    }
+
+    // Refresh display indices
+    displayWords.value.forEach((word: any, index: number) => {
+      word.displayIndex = index
+    })
+
+    // Clear the fly-in flag after animation
+    setTimeout(() => {
+      const first = displayWords.value[0]
+      if (first && first.id === newestWord.id) {
+        first._flyIn = false
+      }
+    }, 650)
+
+    // Trigger AI etymology analysis after the card has fully settled.
+    // The fly-in animation is 600ms, then we wait an extra 400ms for the card
+    // to stabilize before opening the drawer (which causes a layout reflow).
+    setTimeout(() => {
+      const meaningsSummary = newestWord.chineseMeaning
+        .map(
+          (m: { partOfSpeech: string; definitions: string[] }) =>
+            `${m.partOfSpeech}: ${m.definitions.join('\uFF0C')}`,
+        )
+        .join('\uFF1B')
+      openWithEtymologyPrompt(newestWord.word, meaningsSummary)
+    }, 1050)
+
+    return
+  }
+
+  // Case 2: Non-empty stack — 3D lift-spin-slam animation
+  if (isAnimating.value) return // Block rapid additions during animation
+
+  isAnimating.value = true
+
+  // Store the new word data for mid-spin swap
+  pendingNewWord.value = newestWord
+
+  // Set the spinning flag on the top card to trigger the CSS animation
+  const topCard = displayWords.value[0]
+  if (topCard) {
+    topCard._spinning = true
+  }
+
+  // At ~50% of 900ms (~450ms), swap the card data (card is mid-shake)
+  setTimeout(() => {
+    if (pendingNewWord.value && displayWords.value[0]) {
+      const newWord = pendingNewWord.value
+      // Replace top card data while preserving the _spinning flag and _displayKey
+      const spinningCard = displayWords.value[0]
+      const stableKey = spinningCard._displayKey
+      Object.assign(spinningCard, {
+        ...newWord,
+        displayIndex: 0,
+        _spinning: true,
+        _displayKey: stableKey,
+      })
+    }
+  }, 450)
+}
+
+const handleSpinEnd = () => {
+  // Clear spinning flag
+  const topCard = displayWords.value[0]
+  if (topCard) {
+    topCard._spinning = false
+  }
+
+  // Trim the stack to max cards (in case we need to)
+  const maxCards = 4
   if (displayWords.value.length > maxCards) {
     displayWords.value = displayWords.value.slice(0, maxCards)
   }
@@ -352,28 +435,29 @@ const handleWordAdded = () => {
     word.displayIndex = index
   })
 
-  // Clear the fly-in flag after the animation completes (600ms)
-  setTimeout(() => {
-    const first = displayWords.value[0]
-    if (first && first.id === newestWord.id) {
-      first._flyIn = false
-    }
-  }, 650)
+  isAnimating.value = false
 
-  // Trigger AI etymology analysis in sidebar after a short delay
-  // so the fly-in animation is visible first
-  setTimeout(() => {
-    // Convert ChineseMeaning[] to a readable summary string
-    const meaningsSummary = newestWord.chineseMeaning
-      .map(
-        (m: { partOfSpeech: string; definitions: string[] }) =>
-          `${m.partOfSpeech}: ${m.definitions.join('，')}`,
-      )
-      .join('；')
-    openWithEtymologyPrompt(newestWord.word, meaningsSummary)
-  }, 800)
+  // Delay AI drawer opening so the card settles into its resting position first.
+  // Opening the drawer causes a layout reflow (container width shrinks by 520px),
+  // which would cause a visible flicker if it happens on the same frame as
+  // the Web Animations API releasing control back to inline styles.
+  if (pendingNewWord.value) {
+    const newestWord = pendingNewWord.value
+    pendingNewWord.value = null
+
+    // Wait for the card's resting-position transition (300ms) to finish,
+    // then open the drawer so the layout shift doesn't clash with the card animation.
+    setTimeout(() => {
+      const meaningsSummary = newestWord.chineseMeaning
+        .map(
+          (m: { partOfSpeech: string; definitions: string[] }) =>
+            `${m.partOfSpeech}: ${m.definitions.join('\uFF0C')}`,
+        )
+        .join('\uFF1B')
+      openWithEtymologyPrompt(newestWord.word, meaningsSummary)
+    }, 350)
+  }
 }
-
 onMounted(() => {
   // Initialize display words
   initializeDisplayWords()
@@ -547,7 +631,33 @@ onMounted(() => {
   max-width: 380px;
   height: 460px;
   margin: 0 auto;
-  perspective: 1000px;
+}
+
+/* Slam impact shake on the container */
+.stack-shake {
+  animation: stackShake 0.2s ease-out;
+  will-change: transform;
+}
+
+@keyframes stackShake {
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+  20% {
+    transform: translate3d(0, 3px, 0);
+  }
+  40% {
+    transform: translate3d(0, -2px, 0);
+  }
+  60% {
+    transform: translate3d(0, 1px, 0);
+  }
+  80% {
+    transform: translate3d(0, -1px, 0);
+  }
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
 }
 
 /* ===== TransitionGroup Animations ===== */
